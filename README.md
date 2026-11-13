@@ -102,6 +102,8 @@ Tidak perlu mengulang seeder atau `key:generate` pada setiap update. Jangan meni
 `.gitignore` hanya mencegah file baru ditambahkan. Jika sebelumnya file sensitif sudah pernah masuk commit, mengubah `.gitignore` tidak menghapusnya dari index atau riwayat Git. Saat pengaturan ini dibuat, direktori proyek belum memiliki `.git`; tidak ada commit atau push yang dilakukan oleh perubahan ini.
 
 
-## Foto laporan dari kamera
+## Upload foto laporan
 
-Tombol Ambil foto meminta kamera belakang melalui capture=environment pada browser mobile yang mendukung. Setiap foto diperkecil di perangkat (maksimal sisi panjang 1600 px) lalu dikonversi JPEG dengan target <=1.900.000 byte sebelum upload. Server membatasi foto baru maksimal 1953 KiB, sedikit di bawah 2.000.000 byte. Total maksimal 5 foto termasuk foto tersimpan. Foto lama tidak diubah. Browser tanpa dukungan capture dapat menampilkan pemilih berkas; pengujian kamera fisik Android/iPhone belum dilakukan. Push hasil build public/build agar modul kompresi terbaru tersedia di hosting.
+Foto dipilih dari galeri/berkas melalui upload Livewire biasa. Mode capture kamera dan kompresi JavaScript telah dinonaktifkan sesuai permintaan pengguna. Maksimal 5 foto termasuk foto tersimpan, masing-masing foto baru maksimal 1953 KiB (di bawah 2 MB). Foto tidak dikompres otomatis; pilih/perkecil foto sebelum mengunggah jika ukurannya terlalu besar. Preview dan hapus sebelum simpan tetap tersedia.
+
+Riwayat/monitoring menampilkan Kendala dan Catatan tambahan. Pagination 10 laporan per halaman memakai Livewire; perpindahan detail dan menu tetap memakai navigasi SPA.

@@ -1,3 +1,1 @@
-import { uploadReportCameraPhoto } from './report-camera';
-
-window.uploadReportCameraPhoto = uploadReportCameraPhoto;
+// Application interactions are handled by Livewire and Alpine.

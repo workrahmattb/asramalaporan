@@ -35,6 +35,6 @@ class ReportHistory extends Component
         $asramas = auth()->user()->isAdmin() ? Asrama::all() : auth()->user()->assignedAsramas()->get();
         $q = DailyReport::visibleTo(auth()->user())->with('user', 'asrama', 'items')->when($this->month, fn ($q) => $q->where('report_date', 'like', $this->month.'%'))->when($this->date, fn ($q) => $q->whereDate('report_date', $this->date))->when($this->asramaId, fn ($q) => $q->where('asrama_id', $this->asramaId))->when($this->status, fn ($q) => $q->where('status', $this->status));
 
-        return view('livewire.reports.history', ['asramas' => $asramas, 'reports' => $q->orderByDesc('report_date')->paginate(15)])->layout('layouts.simus');
+        return view('livewire.reports.history', ['asramas' => $asramas, 'reports' => $q->orderByDesc('report_date')->orderByDesc('id')->paginate(10)])->layout('layouts.simus');
     }
 }

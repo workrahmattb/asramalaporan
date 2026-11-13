@@ -48,3 +48,5 @@
 
 /* Brand name supports the full product name on compact screens. */
 .brand strong{font-size:1.1rem;letter-spacing:-.025em}.pembina-brand{letter-spacing:-.02em}.mobile-brand{letter-spacing:-.02em}
+
+.report-note-cell{min-width:12rem;max-width:22rem;white-space:pre-wrap;overflow-wrap:anywhere}.history-report-notes{margin-top:.75rem;display:grid;gap:.65rem}.history-report-notes dt{font-size:.75rem;font-weight:600;color:var(--text)}.history-report-notes dd{font-size:.8125rem;color:var(--secondary);white-space:pre-wrap;overflow-wrap:anywhere;margin-top:.15rem}
