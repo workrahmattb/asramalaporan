@@ -51,6 +51,12 @@ class ReportForm extends Component
         }
     }
 
+    public function updatedPhotos(): void
+    {
+        $existing = $this->reportId ? DailyReport::findOrFail($this->reportId)->photos()->count() : 0;
+        $this->validate(['photos' => 'array|max:'.max(0, 5 - $existing), 'photos.*' => 'image|mimes:jpg,jpeg,png,webp|max:1953']);
+    }
+
     public function removePhoto(int $index): void
     {
         $photos = $this->photos;

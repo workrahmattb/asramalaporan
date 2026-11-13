@@ -26,7 +26,7 @@ Perintah admin meminta password secara tersembunyi (wajib diisi). Seeder sekaran
 
 - Dashboard per role, akun aktif, registrasi publik dinonaktifkan.
 - Master asrama, kegiatan, akun dan penempatan; 11 kegiatan awal di-seed tanpa membuat akun demo.
-- Laporan draft dan terkirim, checklist opsional, kendala, catatan, maksimal 5 foto masing-masing 5 MB.
+- Laporan draft dan terkirim, checklist opsional, kendala, catatan, maksimal 5 foto baru masing-masing di bawah 2 MB.
 - Snapshot nama/urutan/daftar kegiatan, persentase server, indeks unik laporan dan item.
 - Foto privat pada disk `local`, hanya tersedia melalui endpoint yang memeriksa policy.
 - Riwayat dengan pagination dan filter bulan/tanggal/asrama/status.
@@ -49,7 +49,7 @@ npm run build
 
 ## Deployment
 
-Arahkan document root ke `public`, gunakan HTTPS, `APP_DEBUG=false`, set kredensial database dan layanan email untuk reset password, dan jalankan migrasi, build, serta `php artisan optimize`. PHP memerlukan ekstensi database, fileinfo, dan zip (export XLSX). Pastikan `storage` dan `bootstrap/cache` dapat ditulis. Tidak perlu `storage:link` untuk foto laporan privat. Atur `upload_max_filesize` minimal 5M dan `post_max_size` di atas 25M.
+Arahkan document root ke `public`, gunakan HTTPS, `APP_DEBUG=false`, set kredensial database dan layanan email untuk reset password, dan jalankan migrasi, build, serta `php artisan optimize`. PHP memerlukan ekstensi database, fileinfo, dan zip (export XLSX). Pastikan `storage` dan `bootstrap/cache` dapat ditulis. Tidak perlu `storage:link` untuk foto laporan privat. Atur `upload_max_filesize` minimal 2M dan `post_max_size` di atas 10M.
 
 Backup database dan `storage/app/private` harus dijadwalkan pada hosting. Deployment hosting, konfigurasi email, uji MySQL/MariaDB, dan pemeriksaan visual pada perangkat fisik belum dilakukan. Notifikasi WhatsApp, PWA, PDF, penilaian berbobot, dan integrasi eksternal termasuk fase lanjutan PRD.
 
@@ -100,3 +100,8 @@ php artisan optimize
 Tidak perlu mengulang seeder atau `key:generate` pada setiap update. Jangan menimpa `.env` hosting, database, atau `storage/app/private`; data tersebut tidak dikelola Git. PHP hosting harus sesuai batas dependensi Composer dan menyediakan ekstensi database, fileinfo, serta zip untuk export Excel.
 
 `.gitignore` hanya mencegah file baru ditambahkan. Jika sebelumnya file sensitif sudah pernah masuk commit, mengubah `.gitignore` tidak menghapusnya dari index atau riwayat Git. Saat pengaturan ini dibuat, direktori proyek belum memiliki `.git`; tidak ada commit atau push yang dilakukan oleh perubahan ini.
+
+
+## Foto laporan dari kamera
+
+Tombol Ambil foto meminta kamera belakang melalui capture=environment pada browser mobile yang mendukung. Setiap foto diperkecil di perangkat (maksimal sisi panjang 1600 px) lalu dikonversi JPEG dengan target <=1.900.000 byte sebelum upload. Server membatasi foto baru maksimal 1953 KiB, sedikit di bawah 2.000.000 byte. Total maksimal 5 foto termasuk foto tersimpan. Foto lama tidak diubah. Browser tanpa dukungan capture dapat menampilkan pemilih berkas; pengujian kamera fisik Android/iPhone belum dilakukan. Push hasil build public/build agar modul kompresi terbaru tersedia di hosting.

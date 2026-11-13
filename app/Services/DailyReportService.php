@@ -20,7 +20,7 @@ class DailyReportService
     {
         Gate::forUser($user)->authorize($report ? 'update' : 'create', $report ?: DailyReport::class);
         Validator::make($data, ['report_date' => 'required|date_format:Y-m-d|before_or_equal:today', 'status' => 'required|in:draft,submitted', 'completed' => 'array', 'completed.*' => 'integer|distinct', 'obstacles' => 'nullable|string|max:10000', 'notes' => 'nullable|string|max:10000'])->validate();
-        Validator::make(['photos' => $photos], ['photos' => 'array|max:5', 'photos.*' => 'image|mimes:jpg,jpeg,png,webp|max:5120'])->validate();
+        Validator::make(['photos' => $photos], ['photos' => 'array|max:5', 'photos.*' => 'image|mimes:jpg,jpeg,png,webp|max:1953'])->validate();
         if (! $report && ! $user->isAdmin() && $data['report_date'] !== today()->toDateString()) {
             throw ValidationException::withMessages(['report_date' => 'Pelaporan tanggal sebelumnya hanya dapat dibuat admin.']);
         }

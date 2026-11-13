@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -94,5 +95,17 @@ class SimusTest extends TestCase
         $u = User::factory()->create(['is_active' => false]);
         $this->post('/login', ['email' => $u->email, 'password' => 'password'])->assertSessionHasErrors('email');
         $this->assertGuest();
+    }
+
+    public function test_photo_above_two_mb_is_rejected_before_report_creation(): void
+    {
+        $u = $this->musyrifah();
+        $this->expectException(ValidationException::class);
+        try {
+            app(DailyReportService::class)->save($u, ['report_date' => today()->toDateString(), 'status' => 'draft', 'completed' => []], [UploadedFile::fake()->image('large.jpg')->size(2000)]);
+        } finally {
+            $this->assertDatabaseCount('daily_reports', 0);
+            $this->assertDatabaseCount('daily_report_photos', 0);
+        }
     }
 }
