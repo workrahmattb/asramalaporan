@@ -27,7 +27,7 @@ class PembinaEditorTest extends TestCase
             ->call('save')->assertHasErrors(['name', 'email', 'password', 'asrama_id'])->assertSet('showEditor', true);
         $this->assertDatabaseCount('users', 1);
         $component->set('name', 'Pembina Baru')->set('email', 'pembina@example.com')
-            ->set('password', 'Individual-Password-99!')->set('role', 'musyrif')->set('asrama_id', (string) $asrama->id)
+            ->set('password', '123456')->set('role', 'musyrif')->set('asrama_id', (string) $asrama->id)
             ->call('save')->assertHasNoErrors()->assertSet('showEditor', false)
             ->assertSet('filterAsrama', (string) $asrama->id)->assertSet('gender', 'putra');
         $user = User::where('email', 'pembina@example.com')->firstOrFail();

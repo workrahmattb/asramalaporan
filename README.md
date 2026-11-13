@@ -20,7 +20,7 @@ npm run build
 php artisan serve
 ```
 
-Perintah admin meminta password secara tersembunyi (minimal 12 karakter). Seeder sekarang membuat akun bootstrap Administrator; lihat bagian Seeder di bawah. Login lalu buat asrama dan akun Musyrifah/koordinator melalui menu admin. Penempatan mulai berlaku pada hari akun ditempatkan; tanggal awal riwayat dapat dikelola lewat database jika diperlukan saat migrasi data lama. Admin dapat mempunyai penempatan asrama untuk mengisi laporan sendiri.
+Perintah admin meminta password secara tersembunyi (wajib diisi). Seeder sekarang membuat akun bootstrap Administrator; lihat bagian Seeder di bawah. Login lalu buat asrama dan akun Musyrifah/koordinator melalui menu admin. Penempatan mulai berlaku pada hari akun ditempatkan; tanggal awal riwayat dapat dikelola lewat database jika diperlukan saat migrasi data lama. Admin dapat mempunyai penempatan asrama untuk mengisi laporan sendiri.
 
 ## Fitur
 
@@ -69,7 +69,7 @@ Akun seeder terbaru di semua environment, termasuk production:
 - Reseed biasa mempertahankan password yang sudah dipersonalisasi. Untuk secara sengaja mengembalikan password akun bawaan ke `123456`, jalankan `php artisan db:seed --class=ResetSeededPasswordsSeeder --force` setelah seeder utama. Perintah tersebut hanya menargetkan admin bootstrap dan identitas 37 pembina dari katalog, tanpa mengubah laporan atau penempatan.
 - Password bersama mudah ditebak bila hosting dapat diakses publik. Alamat email dalam database tidak membuat mailbox sungguhan.
 
-`PembinaCredentialsSeeder` menyiapkan login akun seeded yang masih pending. Nama lama `DevelopmentPembinaSeeder` tetap tersedia sebagai alias kompatibilitas. Penetapan password baru melalui form admin tetap memakai aturan validasi aplikasi sebelumnya.
+`PembinaCredentialsSeeder` menyiapkan login akun seeded yang masih pending. Nama lama `DevelopmentPembinaSeeder` tetap tersedia sebagai alias kompatibilitas. Form password hanya mensyaratkan nilai yang tidak kosong, tanpa aturan panjang/kompleksitas; alur ganti password pengguna tetap memeriksa password saat ini dan konfirmasi baru.
 
 
 ## GitHub dan hosting dengan git pull

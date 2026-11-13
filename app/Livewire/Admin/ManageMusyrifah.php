@@ -67,7 +67,7 @@ class ManageMusyrifah extends Component
     public function save(): void
     {
         abort_unless(auth()->user()->isAdmin() && auth()->user()->is_active, 403);
-        $data = $this->validate(['name' => 'required|string|max:255', 'email' => 'required|email|max:255|unique:users,email,'.($this->editId ?? 'NULL'), 'password' => ($this->editId ? 'nullable' : 'required').'|string|min:12', 'role' => 'required|in:super_admin,admin,koordinator,musyrif,musyrifah', 'asrama_id' => (in_array($this->role, ['admin', 'super_admin']) ? 'nullable' : 'required').'|exists:asramas,id', 'is_active' => 'boolean']);
+        $data = $this->validate(['name' => 'required|string|max:255', 'email' => 'required|email|max:255|unique:users,email,'.($this->editId ?? 'NULL'), 'password' => ($this->editId ? 'nullable' : 'required').'|string', 'role' => 'required|in:super_admin,admin,koordinator,musyrif,musyrifah', 'asrama_id' => (in_array($this->role, ['admin', 'super_admin']) ? 'nullable' : 'required').'|exists:asramas,id', 'is_active' => 'boolean']);
         if ($this->editId === auth()->id() && (! $this->is_active || ! in_array($this->role, ['admin', 'super_admin']))) {
             $this->addError('role', 'Akun admin sendiri harus tetap aktif sebagai admin.');
 

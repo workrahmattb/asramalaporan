@@ -4,9 +4,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 
 Artisan::command('simus:admin {email} {name}', function () {
-    $password = $this->secret('Password admin (minimal 12 karakter)');
-    if (strlen($password ?? '') < 12) {
-        $this->error('Password minimal 12 karakter.');
+    $password = $this->secret('Password admin');
+    if (($password ?? '') === '') {
+        $this->error('Password wajib diisi.');
 
         return 1;
     } if (User::where('email', $this->argument('email'))->exists()) {

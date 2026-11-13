@@ -132,8 +132,9 @@ class SecurityTest extends TestCase
             ->assertSet('recoveryCodes', ['code1', 'code2']);
     }
 
-    public function test_password_can_be_updated(): void
+    public function test_simple_password_can_be_used_in_production(): void
     {
+        $this->app->instance('env', 'production');
         $user = User::factory()->create([
             'password' => Hash::make('password'),
         ]);
@@ -142,13 +143,13 @@ class SecurityTest extends TestCase
 
         $response = Livewire::test('pages::settings.security')
             ->set('current_password', 'password')
-            ->set('password', 'new-password')
-            ->set('password_confirmation', 'new-password')
+            ->set('password', '123456')
+            ->set('password_confirmation', '123456')
             ->call('updatePassword');
 
         $response->assertHasNoErrors();
 
-        $this->assertTrue(Hash::check('new-password', $user->refresh()->password));
+        $this->assertTrue(Hash::check('123456', $user->refresh()->password));
     }
 
     public function test_correct_password_must_be_provided_to_update_password(): void
