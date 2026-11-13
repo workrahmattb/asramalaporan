@@ -62,3 +62,8 @@ Selisih dengan target 25 asrama berasal dari rincian sumber yang berisi 12 kelom
 ## Pembaruan development
 
 Ditambahkan `database/seeders/DevelopmentPembinaSeeder.php`, dipanggil oleh `DatabaseSeeder` hanya untuk environment local/testing. Pada database development yang sudah diperbarui, 37 pembina sudah siap login memakai email berdasarkan nama `@syafaaturrasul.com` dan password `123456`; jumlah pembina menunggu kredensial menjadi 0. Akun admin tidak diubah. Password tetap di-hash, dan tidak wajib diganti saat login di development. Akun yang sudah dipersonalisasi tidak direset ketika seed diulang. Ketentuan placeholder dan penetapan kredensial pada bagian sebelumnya tetap berlaku untuk production.
+
+
+## Pembaruan terbaru: password awal hosting
+
+Atas permintaan eksplisit pengguna, seeder utama kini menyiapkan admin dan 37 pembina dengan password awal 123456 juga di production, tanpa SIMUS_ADMIN_PASSWORD. Akun baru/pending dapat langsung login tanpa wajib mengganti password. Bagian kebijakan production kuat sebelumnya sudah digantikan; lihat README terbaru. Reseed mempertahankan password personal. Reset yang disengaja dilakukan dengan ResetSeededPasswordsSeeder, hanya untuk akun bootstrap/katalog bawaan. Password tetap di-hash.

@@ -6,7 +6,7 @@ $pembinaToday=auth()->user()->reports()->whereDate('report_date',today())->first
 $laporUrl=$pembinaToday ? route(auth()->user()->can('update',$pembinaToday) ? 'reports.edit' : 'reports.show',$pembinaToday) : route('reports.create');
 $laporActive=request()->routeIs('reports.create','reports.edit','reports.show');
 @endphp
-<div class="pembina-shell"><header class="pembina-header"><a wire:navigate class="pembina-brand" href="{{ route('dashboard') }}"><span class="brand-mark"><x-simus-icon name="report"/></span><span>SIMUS<small>Teman pembinaan harian</small></span></a><a wire:navigate href="{{ route('profile.edit') }}" class="avatar pembina-profile" aria-label="Buka profil {{ auth()->user()->name }}">{{ auth()->user()->initials() }}</a></header>
+<div class="pembina-shell"><header class="pembina-header"><a wire:navigate class="pembina-brand" href="{{ route('dashboard') }}"><span class="brand-mark"><x-simus-icon name="report"/></span><span>{{ config('app.name', 'Sistem Asrama') }}<small>Teman pembinaan harian</small></span></a><a wire:navigate href="{{ route('profile.edit') }}" class="avatar pembina-profile" aria-label="Buka profil {{ auth()->user()->name }}">{{ auth()->user()->initials() }}</a></header>
 <main id="main-content" class="pembina-content" tabindex="-1">
 @if(session('success'))<div role="status" class="notice notice-success"><x-simus-icon name="check"/><span>{{ session('success') }}</span></div>@endif
 @if($errors->any())<div role="alert" class="notice notice-error"><div><strong>Periksa kembali isian berikut</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div></div>@endif

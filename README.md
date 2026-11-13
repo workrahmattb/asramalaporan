@@ -1,4 +1,4 @@
-# SIMUS — Sistem Monitoring Musyrifah
+# Sistem Asrama — Monitoring Musyrif/Musyrifah
 
 Aplikasi Laravel monolith untuk laporan tugas harian Pondok Pesantren Syafa'aturrasul. Menggunakan Laravel 13 / Livewire 4 yang sudah terpasang pada proyek awal (PRD menyebut Laravel 12), Tailwind, dan autentikasi Fortify. Struktur komponen mengikuti direktori `app/Livewire/Dashboard`, `Reports`, dan `Admin`.
 
@@ -60,24 +60,17 @@ Jalankan `php artisan migrate` lalu `php artisan db:seed`. Seeder terpisah dijal
 
 Data rincian sumber berisi **12 kelompok putra**, bukan 11 seperti total pada dokumen. Semua rincian dipertahankan: 12 putra + 14 putri = **26 kelompok**, 22 Musyrif + 15 Musyrifah = **37 pembina**, total **38 pengguna** termasuk Administrator. Nama kelompok tetap utuh, termasuk kelompok yang mengandung `&`. `asramas.unit` digunakan untuk gedung Khodijah/Hafshah/Aisyah; tidak ditambahkan kolom building yang redundan. `gender` ditambahkan karena belum ada representasi setara.
 
-Admin development: `admin@ppsyaaturrasul.com`, password bootstrap `123456`, role `super_admin`. Pada production, wajib isi `SIMUS_ADMIN_PASSWORD` di environment dengan minimal 12 karakter, huruf besar/kecil, angka, dan simbol sebelum seeding. Password tidak dicetak ke log. Admin production diwajibkan mengganti password saat login pertama. Rerun tidak mereset password akun yang sudah ada; jika database development dibawa ke production, password bootstrap lama diwajibkan diganti sebelum akses fitur.
+Akun seeder terbaru di semua environment, termasuk production:
 
-Pada production, pembina memakai identifier internal `simus-musyrif-NNN@accounts.simus.invalid` / `simus-musyrifah-NNN@accounts.simus.invalid`, `seed_key` unik, password acak berbeda, status data aktif, dan `credentials_ready=false`. Identifier ini bukan email pribadi. Login dan notifikasi reset/verifikasi email diblokir sampai admin membuka **Data Pengguna & Penempatan**, memilih Edit, menetapkan email asli yang dikonfirmasi dan password baru minimal 12 karakter. Sampaikan kredensial awal melalui kanal pribadi. Pembina wajib menetapkan password baru sebelum membuka fitur. Filter asrama dan gender tersedia pada daftar pengguna.
+- Admin: `admin@ppsyaaturrasul.com`, password `123456`.
+- 37 pembina: email berdasarkan nama pada domain `@syafaaturrasul.com`, password `123456`.
+- Password tetap disimpan sebagai hash. Login siap dan tidak diwajibkan mengganti password pertama untuk akun hasil seeder.
+- `SIMUS_ADMIN_PASSWORD` tidak lagi diperlukan oleh seeder.
+- Reseed biasa mempertahankan password yang sudah dipersonalisasi. Untuk secara sengaja mengembalikan password akun bawaan ke `123456`, jalankan `php artisan db:seed --class=ResetSeededPasswordsSeeder --force` setelah seeder utama. Perintah tersebut hanya menargetkan admin bootstrap dan identitas 37 pembina dari katalog, tanpa mengubah laporan atau penempatan.
+- Password bersama mudah ditebak bila hosting dapat diakses publik. Alamat email dalam database tidak membuat mailbox sungguhan.
 
-Seeder tidak menghapus data tambahan, tidak mereset kredensial pembina, dan tidak mengubah atau membuat ulang penempatan jika pengguna sudah memiliki riwayat. Kode asrama dan `seed_key` adalah identitas tetap; jangan mengganti kode asrama atau seed_key pengguna saat menambah data. Jumlah target hanya berlaku pada database tanpa data tambahan. Migrasi bersifat penambahan; tidak menggunakan `migrate:fresh` atau `db:wipe`.
+`PembinaCredentialsSeeder` menyiapkan login akun seeded yang masih pending. Nama lama `DevelopmentPembinaSeeder` tetap tersedia sebagai alias kompatibilitas. Penetapan password baru melalui form admin tetap memakai aturan validasi aplikasi sebelumnya.
 
-
-### Kredensial pembina untuk development
-
-Pada `APP_ENV=local` atau `testing`, `DatabaseSeeder` juga menjalankan `DevelopmentPembinaSeeder`. Seluruh 37 pembina baru memakai email berdasarkan nama dengan domain `@syafaaturrasul.com` dan password **123456** yang disimpan melalui `Hash::make()`. Akun dapat langsung login tanpa kewajiban ganti password, hanya untuk development. Email development ditandai terverifikasi lokal; ini tidak membuat mailbox sungguhan.
-
-Seeder development hanya menginisialisasi akun seeded yang masih `credentials_ready=false`; rerun tidak mereset password yang sudah dipersonalisasi, email yang sudah ditetapkan, atau akun admin. Menjalankan seeder ini secara langsung di production akan ditolak. Production tetap memakai kredensial acak dan mekanisme penetapan akun sebelumnya. Jangan membawa database development ke production tanpa menetapkan ulang kredensialnya.
-
-## Navigasi Livewire SPA
-
-Perpindahan halaman internal (dashboard, menu admin, navigasi bawah pembina, riwayat/detail/edit laporan, rekap dan profil) menggunakan `wire:navigate`. Redirect setelah simpan laporan juga memakai navigasi SPA. Login/logout, unduh Excel, foto di tab baru, dan anchor lokal tetap menggunakan alur browser biasa.
-
-Form laporan mengingat perubahan sejak pengguna mengetik dan meminta konfirmasi sebelum pindah melalui SPA maupun meninggalkan halaman biasa. Redirect dari penyimpanan yang berhasil tidak memunculkan peringatan ini. Toast tetap dipersist, sedangkan navigasi dinamis dirender kembali agar status aktif dan tujuan laporan hari ini tetap akurat.
 
 ## GitHub dan hosting dengan git pull
 
@@ -91,7 +84,7 @@ Instalasi pertama di hosting:
 2. Jalankan `composer install --no-dev --prefer-dist --optimize-autoloader`.
 3. Salin `.env.example` menjadi `.env` hanya pada instalasi pertama. Isi konfigurasi production: `APP_ENV=production`, `APP_DEBUG=false`, URL HTTPS, koneksi MySQL, dan layanan email.
 4. Jalankan `php artisan key:generate` **hanya saat instalasi pertama**. Pertahankan APP_KEY dan `.env` tersebut pada update berikutnya.
-5. Jalankan `php artisan migrate --force`. Jika membutuhkan data awal, isi `SIMUS_ADMIN_PASSWORD` kuat lalu jalankan `php artisan db:seed --force` satu kali sesuai kebutuhan. Seeder development tidak dijalankan pada production.
+5. Jalankan `php artisan migrate --force`. Jika membutuhkan data awal, jalankan `php artisan db:seed --force` satu kali sesuai kebutuhan. Password awal akun bawaan adalah `123456`.
 6. Pastikan `storage` dan `bootstrap/cache` writable, lalu jalankan `php artisan optimize`.
 
 Update berikutnya setelah backup database dan storage:

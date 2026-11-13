@@ -42,7 +42,7 @@ class ReportMonitoringTest extends TestCase
         $this->assertSame(0.0, $rows[0]['average']);
         $this->actingAs($coordinator)->get('/reports/monthly')->assertOk();
         $response = $this->get('/reports/export?month=2026-11');
-        $response->assertOk()->assertDownload('simus-2026-11.xlsx');
+        $response->assertOk()->assertDownload('sistem-asrama-2026-11.xlsx');
         $zip = new \ZipArchive;
         $this->assertTrue($zip->open($response->baseResponse->getFile()->getPathname()));
         $xml = html_entity_decode($zip->getFromName('xl/worksheets/sheet1.xml'), ENT_QUOTES | ENT_XML1, 'UTF-8');

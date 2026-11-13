@@ -15,4 +15,4 @@ Artisan::command('simus:admin {email} {name}', function () {
         return 1;
     } User::create(['name' => $this->argument('name'), 'email' => $this->argument('email'), 'password' => $password, 'role' => 'admin', 'is_active' => true])->forceFill(['email_verified_at' => now()])->save();
     $this->info('Admin berhasil dibuat.');
-})->purpose('Buat akun administrator SIMUS');
+})->purpose('Buat akun administrator Sistem Asrama');

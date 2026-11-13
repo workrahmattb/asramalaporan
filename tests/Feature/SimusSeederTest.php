@@ -10,6 +10,7 @@ use Database\Seeders\AsramaSeeder;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\MusyrifahSeeder;
 use Database\Seeders\MusyrifSeeder;
+use Database\Seeders\ResetSeededPasswordsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -88,25 +89,27 @@ class SimusSeederTest extends TestCase
         $this->get('/dashboard/musyrifah')->assertOk();
     }
 
-    public function test_production_seed_requires_strong_environment_password(): void
+    public function test_production_seed_uses_default_password_without_environment_configuration(): void
     {
         $this->app->instance('env', 'production');
         config(['simus.admin_password' => null]);
-        try {
-            $this->app->make(DatabaseSeeder::class)->setContainer($this->app)->run();
-            $this->fail('Production must reject missing bootstrap password.');
-        } catch (\RuntimeException $e) {
-            $this->assertStringContainsString('SIMUS_ADMIN_PASSWORD', $e->getMessage());
-        }
-        $this->assertDatabaseCount('users', 0);
-        $this->assertDatabaseCount('asramas', 0);
-        config(['simus.admin_password' => 'Production-Bootstrap-99!']);
         $this->app->make(DatabaseSeeder::class)->setContainer($this->app)->run();
+        $this->assertDatabaseCount('users', 38);
+        foreach (User::all() as $user) {
+            $this->assertTrue(Hash::check('123456', $user->password));
+            $this->assertTrue($user->credentials_ready);
+            $this->assertFalse($user->must_change_password);
+            $this->assertStringNotContainsString('.invalid', $user->email);
+        }
         $admin = User::where('role', 'super_admin')->firstOrFail();
-        $this->assertTrue(Hash::check('Production-Bootstrap-99!', $admin->password));
-        $this->assertTrue($admin->must_change_password);
-        $this->assertSame(37, User::where('credentials_ready', false)->count());
-        $this->actingAs($admin)->get('/admin/users')->assertRedirect(route('password.first-change'));
+        $this->actingAs($admin)->get('/admin/users')->assertOk();
+        $admin->password = 'Existing-Personalized-Password-99!';
+        $admin->save();
+        $hash = $admin->password;
+        $this->app->make(DatabaseSeeder::class)->setContainer($this->app)->run();
+        $this->assertSame($hash, $admin->fresh()->password);
+        $this->app->make(ResetSeededPasswordsSeeder::class)->run();
+        $this->assertTrue(Hash::check('123456', $admin->fresh()->password));
     }
 
     public function test_development_accounts_can_login_without_password_rotation(): void
