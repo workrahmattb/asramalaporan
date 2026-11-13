@@ -1,0 +1,85 @@
+# Environment and local credentials (keep the safe setup template)
+.env
+.env.*
+!.env.example
+/auth.json
+/.aws/
+/storage/*.key
+
+# Dependencies: install with Composer on hosting; npm is for local builds
+/vendor/
+/node_modules/
+
+# Keep public/build tracked: build locally before pushing to GitHub.
+# Hosting can then pull the compiled CSS, JS, fonts and manifests without Node.
+/public/hot
+/public/fonts-manifest.dev.json
+/public/storage
+
+# Runtime files, private uploads, sessions, logs and compiled caches.
+# Keep directory placeholders required by a fresh Laravel checkout.
+/storage/**
+!/storage/**/
+!/storage/**/.gitignore
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+
+# Local databases, database dumps and backups
+/database/*.sqlite*
+/database/*.db
+*.sql
+*.sql.gz
+*.sql.zip
+/backups/
+/backup/
+
+# Test and analysis output
+/.phpunit.cache/
+/.phpunit.result.cache
+/coverage/
+/test-results/
+/playwright-report/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local handoff notes, UI screenshots and agent tooling
+/memory.md
+/docs/*.jpg
+/docs/*.jpeg
+/docs/*.png
+/docs/*.webp
+/skills-lock.json
+/.agents/
+/.amp/
+/.claude/
+/.codex/
+/.cursor/
+/.factory/
+/.grok/
+/.junie/
+/.kiro/
+/.pi/
+/.mcp.json
+/AGENTS.md
+/CLAUDE.md
+/boost.json
+/opencode.json
+/opencode.jsonc
+
+# Editor, OS and local development tooling
+/.fleet/
+/.idea/
+/.nova/
+/.vscode/
+/.zed/
+.phpactor.json
+Homestead.json
+Homestead.yaml
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

@@ -1,0 +1,5 @@
+@props(['name', 'title', 'description', 'submitLabel'])
+<flux:modal :name="$name" wire:model="showEditor" wire:close="cancel" :dismissible="false" :closable="false" class="admin-editor" aria-labelledby="{{ $name }}-title" aria-describedby="{{ $name }}-description">
+    <header class="admin-editor-header"><div><p class="eyebrow">Administrasi</p><h2 id="{{ $name }}-title">{{ $title }}</h2><p id="{{ $name }}-description" class="caption">{{ $description }}</p></div><button type="button" class="icon-button" wire:click="cancel" wire:loading.attr="disabled" wire:target="save" aria-label="Tutup formulir"><span aria-hidden="true">×</span></button></header>
+    <form wire:submit="save" class="admin-editor-form"><div class="admin-editor-fields">{{ $slot }}</div><footer class="admin-editor-footer"><span class="caption" role="status" wire:loading wire:target="save">Menyimpan data…</span><div><button type="button" class="button-secondary" wire:click="cancel" wire:loading.attr="disabled" wire:target="save">Batal</button><button type="submit" wire:loading.attr="disabled" wire:target="save">{{ $submitLabel }}</button></div></footer></form>
+</flux:modal>
