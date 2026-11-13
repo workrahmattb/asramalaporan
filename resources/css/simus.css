@@ -50,3 +50,5 @@
 .brand strong{font-size:1.1rem;letter-spacing:-.025em}.pembina-brand{letter-spacing:-.02em}.mobile-brand{letter-spacing:-.02em}
 
 .report-note-cell{min-width:12rem;max-width:22rem;white-space:pre-wrap;overflow-wrap:anywhere}.history-report-notes{margin-top:.75rem;display:grid;gap:.65rem}.history-report-notes dt{font-size:.75rem;font-weight:600;color:var(--text)}.history-report-notes dd{font-size:.8125rem;color:var(--secondary);white-space:pre-wrap;overflow-wrap:anywhere;margin-top:.15rem}
+
+.missing-pagination{border-top:1px solid var(--line);padding-top:1rem;margin-top:.25rem;display:grid;gap:.75rem}.missing-pagination>div{display:flex;gap:.5rem;justify-content:space-between;flex-wrap:wrap}.missing-pagination button{flex:1;font-size:.8125rem}
