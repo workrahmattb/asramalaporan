@@ -107,3 +107,18 @@ Tidak perlu mengulang seeder atau `key:generate` pada setiap update. Jangan meni
 Foto dipilih dari galeri/berkas melalui upload Livewire biasa. Mode capture kamera dan kompresi JavaScript telah dinonaktifkan sesuai permintaan pengguna. Maksimal 5 foto termasuk foto tersimpan, masing-masing foto baru maksimal 1953 KiB (di bawah 2 MB). Foto tidak dikompres otomatis; pilih/perkecil foto sebelum mengunggah jika ukurannya terlalu besar. Preview dan hapus sebelum simpan tetap tersedia.
 
 Riwayat/monitoring menampilkan Kendala dan Catatan tambahan. Pagination 10 laporan per halaman memakai Livewire; perpindahan detail dan menu tetap memakai navigasi SPA.
+
+### Hosting aktif: document root terpisah
+
+Pada hosting yang dipakai saat ini, source berada di `/home/ppsyafaa/asramalaporan`, sedangkan domain `asrama.ppsyafaaturrasul.com` melayani direktori `/home/ppsyafaa/public_html/asrama.ppsyafaaturrasul.com`.
+
+Setelah pull perubahan yang menyertakan build frontend, salin aset ke document root yang sebenarnya:
+
+```sh
+cd /home/ppsyafaa/asramalaporan
+git pull --ff-only
+cp -a /home/ppsyafaa/asramalaporan/public/build/. /home/ppsyafaa/public_html/asrama.ppsyafaaturrasul.com/build/
+php artisan optimize:clear
+```
+
+Langkah salin diperlukan selama document root terpisah dari `public` proyek. Pengguna sudah mengonfirmasi langkah tersebut memperbaiki CSS yang hilang. Tetap jalankan langkah Composer/migration pada panduan utama bila dependensi atau schema berubah.
