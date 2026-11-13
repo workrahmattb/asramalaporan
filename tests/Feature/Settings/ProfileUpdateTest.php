@@ -56,7 +56,7 @@ class ProfileUpdateTest extends TestCase
 
     public function test_user_can_delete_their_account(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'admin']);
 
         $this->actingAs($user);
 
@@ -74,7 +74,7 @@ class ProfileUpdateTest extends TestCase
 
     public function test_correct_password_must_be_provided_to_delete_account(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'admin']);
 
         $this->actingAs($user);
 
@@ -85,5 +85,18 @@ class ProfileUpdateTest extends TestCase
         $response->assertHasErrors(['password']);
 
         $this->assertNotNull($user->fresh());
+    }
+
+    public function test_pembina_cannot_see_or_execute_account_deletion(): void
+    {
+        foreach (['musyrif', 'musyrifah'] as $role) {
+            $user = User::factory()->create(['role' => $role]);
+            $this->actingAs($user);
+            $this->get(route('profile.edit'))->assertOk()->assertDontSee('Delete account')->assertDontSee('delete-user-button', false);
+            Livewire::test('pages::settings.delete-user-modal')
+                ->set('password', 'password')->call('deleteUser')->assertForbidden();
+            $this->assertNotNull($user->fresh());
+            $this->assertAuthenticatedAs($user);
+        }
     }
 }

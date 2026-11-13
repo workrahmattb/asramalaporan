@@ -15,6 +15,8 @@ new class extends Component {
      */
     public function deleteUser(Logout $logout): void
     {
+        abort_unless(Auth::check() && ! Auth::user()->isPembina(), 403);
+
         $this->validate([
             'password' => $this->currentPasswordRules(),
         ]);
