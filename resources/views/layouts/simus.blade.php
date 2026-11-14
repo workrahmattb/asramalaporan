@@ -12,6 +12,7 @@
 <main id="main-content" class="app-content" tabindex="-1">
 @if(session('success'))<div role="status" class="notice notice-success"><x-simus-icon name="check"/><span>{{ session('success') }}</span></div>@endif
 @if($errors->any())<div role="alert" class="notice notice-error"><div><strong>Periksa kembali isian berikut</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div></div>@endif
+<livewire:active-academic-period />
 {{ $slot }}
 <footer class="workspace-footer"><span>{{ config('app.name', 'Sistem Asrama') }} · Pondok Pesantren Syafa'aturrasul</span><span>Pembinaan terarah, laporan tercatat.</span></footer>
 </main></div></div>@persist('toast')<flux:toast.group><flux:toast/></flux:toast.group>@endpersist @fluxScripts</body></html>

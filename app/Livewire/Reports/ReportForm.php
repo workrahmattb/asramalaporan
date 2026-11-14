@@ -20,6 +20,8 @@ class ReportForm extends Component
 
     public string $report_date = '';
 
+    public string $asrama_id = '';
+
     #[Locked]
     public bool $saved = false;
 
@@ -39,6 +41,7 @@ class ReportForm extends Component
         if ($report?->exists) {
             $this->authorize('update', $report);
             $this->reportId = $report->id;
+            $this->asrama_id = (string) $report->asrama_id;
             $this->report_date = $report->report_date->toDateString();
             $this->completed = [];
             foreach ($report->items()->where('is_completed', true)->get() as $item) {
@@ -48,6 +51,7 @@ class ReportForm extends Component
             $this->notes = $report->notes ?? '';
         } else {
             $this->authorize('create', DailyReport::class);
+            $this->asrama_id = (string) (auth()->user()->assignedAsramas()->where('asramas.is_active', true)->value('asramas.id') ?? '');
         }
     }
 
@@ -66,7 +70,7 @@ class ReportForm extends Component
 
     public function save(string $status): void
     {
-        $report = app(DailyReportService::class)->save(auth()->user(), ['report_date' => $this->report_date, 'completed' => $this->completed, 'obstacles' => $this->obstacles, 'notes' => $this->notes, 'status' => $status], $this->photos, $this->reportId ? DailyReport::findOrFail($this->reportId) : null);
+        $report = app(DailyReportService::class)->save(auth()->user(), ['asrama_id' => $this->asrama_id, 'report_date' => $this->report_date, 'completed' => $this->completed, 'obstacles' => $this->obstacles, 'notes' => $this->notes, 'status' => $status], $this->photos, $this->reportId ? DailyReport::findOrFail($this->reportId) : null);
         session()->flash('success', 'Laporan berhasil disimpan.');
 
         $this->saved = true;
@@ -78,6 +82,6 @@ class ReportForm extends Component
     {
         $report = $this->reportId ? DailyReport::with('items', 'photos')->findOrFail($this->reportId) : null;
 
-        return view('livewire.reports.form', ['report' => $report, 'tasks' => $report ? $report->items->sortBy('sort_order') : DailyTask::where('is_active', true)->orderBy('sort_order')->get()])->layout('layouts.simus');
+        return view('livewire.reports.form', ['asramas' => auth()->user()->assignedAsramas($this->report_date)->where('asramas.is_active', true)->get(), 'report' => $report, 'tasks' => $report ? $report->items->sortBy('sort_order') : DailyTask::where('is_active', true)->orderBy('sort_order')->get()])->layout('layouts.simus');
     }
 }

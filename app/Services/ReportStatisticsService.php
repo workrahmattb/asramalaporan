@@ -66,6 +66,6 @@ class ReportStatisticsService
         $users = $q->get();
         $reports = DailyReport::visibleTo($viewer)->whereDate('report_date', $date)->get();
 
-        return ['musyrifah' => $users->count(), 'submitted' => $reports->where('status', '!=', 'draft')->count(), 'missing' => $users->filter(fn ($u) => ! $reports->where('user_id', $u->id)->where('status', '!=', 'draft')->count())->values(), 'pending' => $reports->where('status', 'submitted')->count()];
+        return ['musyrifah' => $users->count(), 'submitted' => $reports->where('status', '!=', 'draft')->whereIn('user_id', $users->pluck('id'))->pluck('user_id')->unique()->count(), 'missing' => $users->filter(fn ($u) => ! $reports->where('user_id', $u->id)->where('status', '!=', 'draft')->count())->values(), 'pending' => $reports->where('status', 'submitted')->count()];
     }
 }

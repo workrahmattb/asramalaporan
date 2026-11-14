@@ -14,12 +14,12 @@ use Illuminate\Validation\ValidationException;
 
 class DailyReportService
 {
-    /** @param array{report_date:string,status:string,completed?:list<int>,obstacles?:?string,notes?:?string} $data
+    /** @param array{report_date:string,status:string,asrama_id?:int|string,completed?:list<int>,obstacles?:?string,notes?:?string} $data
      * @param list<UploadedFile> $photos */
     public function save(User $user, array $data, array $photos = [], ?DailyReport $report = null): DailyReport
     {
         Gate::forUser($user)->authorize($report ? 'update' : 'create', $report ?: DailyReport::class);
-        Validator::make($data, ['report_date' => 'required|date_format:Y-m-d|before_or_equal:today', 'status' => 'required|in:draft,submitted', 'completed' => 'array', 'completed.*' => 'integer|distinct', 'obstacles' => 'nullable|string|max:10000', 'notes' => 'nullable|string|max:10000'])->validate();
+        Validator::make($data, ['asrama_id' => 'nullable|integer', 'report_date' => 'required|date_format:Y-m-d|before_or_equal:today', 'status' => 'required|in:draft,submitted', 'completed' => 'array', 'completed.*' => 'integer|distinct', 'obstacles' => 'nullable|string|max:10000', 'notes' => 'nullable|string|max:10000'])->validate();
         Validator::make(['photos' => $photos], ['photos' => 'array|max:5', 'photos.*' => 'image|mimes:jpg,jpeg,png,webp|max:1953'])->validate();
         if (! $report && ! $user->isAdmin() && $data['report_date'] !== today()->toDateString()) {
             throw ValidationException::withMessages(['report_date' => 'Pelaporan tanggal sebelumnya hanya dapat dibuat admin.']);
@@ -33,7 +33,7 @@ class DailyReportService
                     Gate::forUser($user)->authorize('update', $report);
                     $data['report_date'] = $report->report_date->toDateString();
                 } else {
-                    $asrama = $user->assignedAsramas($data['report_date'])->where('asramas.is_active', true)->first();
+                    $asrama = $user->assignedAsramas($data['report_date'])->where('asramas.is_active', true)->when($data['asrama_id'] ?? null, fn ($q, $id) => $q->where('asramas.id', $id))->first();
                     if (! $asrama) {
                         throw ValidationException::withMessages(['report_date' => 'Belum ada penempatan asrama aktif pada tanggal ini.']);
                     }

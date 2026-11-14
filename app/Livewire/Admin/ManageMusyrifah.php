@@ -25,7 +25,8 @@ class ManageMusyrifah extends Component
 
     public string $role = 'musyrifah';
 
-    public string $asrama_id = '';
+    /** @var list<int|string> */
+    public array $asrama_ids = [];
 
     public bool $is_active = true;
 
@@ -53,7 +54,7 @@ class ManageMusyrifah extends Component
         $this->editId = $id;
         foreach (['name', 'email', 'role', 'is_active'] as $field) {
             $this->$field = $u->$field;
-        } $this->asrama_id = (string) ($u->assignedAsramas()->value('asramas.id') ?? '');
+        } $this->asrama_ids = array_values($u->assignedAsramas()->get()->map(fn (Asrama $asrama) => $asrama->id)->all());
         $this->password = '';
         $this->showEditor = true;
     }
@@ -67,7 +68,7 @@ class ManageMusyrifah extends Component
     public function save(): void
     {
         abort_unless(auth()->user()->isAdmin() && auth()->user()->is_active, 403);
-        $data = $this->validate(['name' => 'required|string|max:255', 'email' => 'required|email|max:255|unique:users,email,'.($this->editId ?? 'NULL'), 'password' => ($this->editId ? 'nullable' : 'required').'|string', 'role' => 'required|in:super_admin,admin,koordinator,musyrif,musyrifah', 'asrama_id' => (in_array($this->role, ['admin', 'super_admin']) ? 'nullable' : 'required').'|exists:asramas,id', 'is_active' => 'boolean']);
+        $data = $this->validate(['name' => 'required|string|max:255', 'email' => 'required|email|max:255|unique:users,email,'.($this->editId ?? 'NULL'), 'password' => ($this->editId ? 'nullable' : 'required').'|string', 'role' => 'required|in:super_admin,admin,koordinator,musyrif,musyrifah', 'asrama_ids' => (in_array($this->role, ['admin', 'super_admin']) ? 'present' : 'required').'|array', 'asrama_ids.*' => 'required|integer|distinct|exists:asramas,id', 'is_active' => 'boolean']);
         if ($this->editId === auth()->id() && (! $this->is_active || ! in_array($this->role, ['admin', 'super_admin']))) {
             $this->addError('role', 'Akun admin sendiri harus tetap aktif sebagai admin.');
 
@@ -86,7 +87,7 @@ class ManageMusyrifah extends Component
         }
         DB::transaction(function () use ($data) {
             $u = $this->editId ? User::whereKey($this->editId)->lockForUpdate()->firstOrFail() : new User;
-            $u->fill(Arr::except($data, ['password', 'asrama_id']));
+            $u->fill(Arr::except($data, ['password', 'asrama_ids']));
             if ($this->password) {
                 $u->password = $this->password;
             } $u->email_verified_at = $u->email_verified_at ?? now();
@@ -95,11 +96,16 @@ class ManageMusyrifah extends Component
                 $u->must_change_password = true;
             }
             $u->save();
-            $current = $u->asramas()->whereNull('asrama_user.end_date')->get();
-            if ($current->count() !== 1 || (string) $current->first()?->id !== $this->asrama_id || $current->first()?->getAttribute('pivot')->assignment_role !== $this->role) {
-                DB::table('asrama_user')->where('user_id', $u->id)->whereNull('end_date')->update(['end_date' => today()->subDay()->toDateString()]);
-                if ($this->asrama_id) {
-                    $u->asramas()->attach($this->asrama_id, ['assignment_role' => $this->role, 'start_date' => today()->toDateString()]);
+            $selected = array_map('intval', $this->asrama_ids);
+            $current = $u->asramas()->withPivot('id')->whereDate('asrama_user.start_date', '<=', today())->where(fn ($q) => $q->whereNull('asrama_user.end_date')->orWhereDate('asrama_user.end_date', '>=', today()))->get();
+            foreach ($current as $placement) {
+                if (! in_array($placement->id, $selected, true) || $placement->getAttribute('pivot')->assignment_role !== $this->role) {
+                    DB::table('asrama_user')->where('id', $placement->getAttribute('pivot')->id)->update(['end_date' => today()->subDay()->toDateString()]);
+                }
+            }
+            foreach ($selected as $id) {
+                if (! $current->contains(fn ($a) => $a->id === $id && $a->getAttribute('pivot')->assignment_role === $this->role)) {
+                    $u->asramas()->attach($id, ['assignment_role' => $this->role, 'start_date' => today()->toDateString()]);
                 }
             }
         });
