@@ -22,6 +22,12 @@ class Asrama extends Model
         return $this->hasMany(DailyReport::class);
     }
 
+    /** @return HasMany<SantriPlacement,$this> */
+    public function currentPlacements(): HasMany
+    {
+        return $this->hasMany(SantriPlacement::class)->whereDate('start_date', '<=', today())->where(fn ($q) => $q->whereNull('end_date')->orWhereDate('end_date', '>=', today()));
+    }
+
     protected function casts(): array
     {
         return ['is_active' => 'boolean'];

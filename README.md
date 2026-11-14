@@ -226,3 +226,54 @@ Mengaktifkan tahun lain menonaktifkan semester lama. Menonaktifkan tahun menutup
 Migration baru `2026_11_14_192353_add_dates_to_academic_years` menambah tanggal pada tahun ajaran tanpa mengubah nilai lama. Hosting perlu `php artisan migrate --force`, sinkronkan `public/build` ke document root, lalu `php artisan optimize:clear`.
 
 Pada penyesuaian lokal ini, satu periode legacy aktif yang kosong sudah dihapus sesuai permintaan pengguna. Tidak ada tahun ajaran aktif saat pemeriksaan dan tidak ada nilai/rapor yang dihapus. Pembersihan tersebut bukan bagian dari migration dan tidak dijalankan otomatis di hosting.
+
+## Mengelola santri dari Asrama
+
+Admin membuka **Asrama → Kelola santri** pada asrama tujuan. Halaman menampilkan anggota asrama beserta identitas ringkas dan jumlah anggota di daftar asrama.
+
+Form **Tambah Santri ke Asrama** tampil langsung di atas tabel. Cari nama/NISN, pilih satu santri aktif yang belum ditempatkan, periksa ringkasan pilihan, lalu klik **Tambah Santri**. Tombol **Batal pilih** mengosongkan pilihan. Santri yang sudah berada di asrama lain tidak dipindahkan otomatis. Pembuatan identitas santri baru dilakukan dari menu **Santri binaan**.
+
+Daftar anggota dan hasil pencarian kandidat memakai pagination 10 baris secara independen. Kategori putra/putri, status asrama/santri, dan penempatan diperiksa ulang di server. Fitur hanya untuk admin aktif. Anggota baru otomatis muncul di Santri binaan pembina yang ditugaskan ke asrama tersebut.
+
+Tabel menyediakan tombol **Lihat** dan **Keluarkan**. Keluarkan membuka dialog konfirmasi; setelah dikonfirmasi, penempatan saat ini ditutup tanpa menghapus identitas santri, catatan, atau rapor. Santri yang sudah dikeluarkan dapat ditempatkan kembali; riwayat penempatan tetap tersimpan. Untuk pindah langsung ke asrama lain, gunakan Edit santri pada menu Santri binaan.
+
+Tambahan fitur ini tidak mengubah schema database, tidak membutuhkan seeder/migrasi baru, dan tidak mereset anggota yang sudah ada. Navigasi tetap Livewire SPA dengan UI Kerja Asrama.
+
+## Pagination daftar data
+
+Seluruh daftar utama memakai pagination 10 data per halaman melalui Livewire: Pembina & Penempatan, Kegiatan harian, Asrama/anggota asrama, Santri, Tahun Ajaran, master aspek, riwayat/monitoring laporan, pemeriksaan/rapor, serta Rekap bulanan admin dan pembina. Pilihan dropdown, checklist isian, rincian satu rapor, dan dokumen cetak tetap ditampilkan lengkap sesuai fungsinya.
+
+Perubahan filter mengembalikan daftar ke halaman pertama. Membuka/menutup popup edit pembina atau kegiatan mempertahankan halaman yang sedang dibuka. Pagination rekap hanya membagi tampilan; perhitungan dan ekspor Excel tetap menggunakan seluruh data sesuai filter. Tidak ada perubahan schema, migration, atau seeder untuk tambahan pagination ini.
+
+## Update hosting yang sudah berisi data
+
+Pembaruan Kelola Santri Asrama dan pagination tanggal 15 November 2026 tidak menambah migration atau seeder. Data anggota lama dibaca dari penempatan yang sudah ada; tidak ada proses pemindahan atau penghapusan otomatis saat deployment.
+
+Sebelum update, buat backup database melalui cPanel/phpMyAdmin (ekspor SQL lengkap) dan backup `.env` serta seluruh direktori `storage/app`. Simpan di luar document root dan pastikan file backup dapat dibaca/diunduh. Catat commit sebelum update dengan `git rev-parse HEAD`. Backup merupakan langkah pemulihan jika ada masalah; pengujian lokal tidak menggantikan backup hosting.
+
+Setelah perubahan source dan `public/build` sudah di-commit dan di-push, jalankan di hosting **satu per satu**, hentikan jika ada perintah gagal:
+
+```sh
+cd /home/ppsyafaa/asramalaporan
+php artisan down
+git pull --ff-only
+composer install --no-dev --prefer-dist --optimize-autoloader
+rm -f public/hot
+php artisan optimize:clear
+php artisan migrate:status
+```
+
+Jika semua migration berstatus **Ran**, tidak perlu menjalankan migration lagi. Jika masih ada **Pending** dari pembaruan terdahulu, periksa dahulu `php artisan migrate --pretend --force`; pastikan backup tersedia sebelum menjalankan `php artisan migrate --force`. Jangan lanjut bila muncul error atau perubahan yang tidak dikenali.
+
+Lanjutkan setelah pemeriksaan/migration berhasil:
+
+```sh
+mkdir -p /home/ppsyafaa/public_html/asrama.ppsyafaaturrasul.com/build
+cp -a /home/ppsyafaa/asramalaporan/public/build/. /home/ppsyafaa/public_html/asrama.ppsyafaaturrasul.com/build/
+php artisan optimize
+php artisan up
+```
+
+Periksa login, CSS, laporan lama, foto, dan daftar santri/penempatan setelah update. Jika aplikasi memakai queue worker, restart worker melalui pengelola proses hosting setelah pembaruan. Jangan hapus aset lama di document root selama pembaruan agar halaman yang masih terbuka tidak kehilangan asetnya.
+
+Untuk pembaruan ini **jangan** menjalankan `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`, seeder, `composer run setup`, atau `key:generate`. Jangan mengganti `.env`, APP_KEY, database, maupun storage dengan salinan lokal. Jika update gagal, biarkan maintenance aktif sambil memeriksa error; jangan mencoba reset database atau rollback migration sebagai perbaikan otomatis.

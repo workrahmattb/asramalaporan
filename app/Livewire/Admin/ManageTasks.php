@@ -6,9 +6,12 @@ use App\Models\DailyTask;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class ManageTasks extends Component
 {
+    use WithPagination;
+
     #[Locked]
     public ?int $editId = null;
 
@@ -48,7 +51,7 @@ class ManageTasks extends Component
 
     public function cancel(): void
     {
-        $this->reset();
+        $this->resetExcept('paginators');
         $this->resetValidation();
     }
 
@@ -65,6 +68,6 @@ class ManageTasks extends Component
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
-        return view('livewire.admin.dailytask', ['records' => DailyTask::orderBy('id')->get()])->layout('layouts.simus');
+        return view('livewire.admin.dailytask', ['records' => DailyTask::orderBy('id')->paginate(10)])->layout('layouts.simus');
     }
 }

@@ -9,9 +9,12 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class ManageMusyrifah extends Component
 {
+    use WithPagination;
+
     #[Locked]
     public ?int $editId = null;
 
@@ -39,6 +42,13 @@ class ManageMusyrifah extends Component
         abort_unless(auth()->user()->isAdmin(), 403);
     }
 
+    public function updated(string $field): void
+    {
+        if (in_array($field, ['filterAsrama', 'gender'], true)) {
+            $this->resetPage();
+        }
+    }
+
     public function create(): void
     {
         abort_unless(auth()->user()->isAdmin() && auth()->user()->is_active, 403);
@@ -61,7 +71,7 @@ class ManageMusyrifah extends Component
 
     public function cancel(): void
     {
-        $this->resetExcept('filterAsrama', 'gender');
+        $this->resetExcept('filterAsrama', 'gender', 'paginators');
         $this->resetValidation();
     }
 
@@ -117,6 +127,6 @@ class ManageMusyrifah extends Component
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
-        return view('livewire.admin.users', ['users' => User::with('asramas')->when($this->filterAsrama, fn ($q) => $q->whereHas('asramas', fn ($a) => $a->where('asramas.id', $this->filterAsrama)->whereNull('asrama_user.end_date')))->when($this->gender, fn ($q) => $q->whereHas('asramas', fn ($a) => $a->where('gender', $this->gender)->whereNull('asrama_user.end_date')))->orderBy('name')->get(), 'asramas' => Asrama::where('is_active', true)->get()])->layout('layouts.simus');
+        return view('livewire.admin.users', ['users' => User::with('asramas')->when($this->filterAsrama, fn ($q) => $q->whereHas('asramas', fn ($a) => $a->where('asramas.id', $this->filterAsrama)->whereNull('asrama_user.end_date')))->when($this->gender, fn ($q) => $q->whereHas('asramas', fn ($a) => $a->where('gender', $this->gender)->whereNull('asrama_user.end_date')))->orderBy('name')->orderBy('id')->paginate(10), 'asramas' => Asrama::where('is_active', true)->get()])->layout('layouts.simus');
     }
 }

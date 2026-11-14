@@ -7,6 +7,7 @@ use App\Http\Controllers\SantriAssessmentPrintController;
 use App\Http\Middleware\EnsureActive;
 use App\Livewire\Admin\AcademicSettings;
 use App\Livewire\Admin\ManageAsrama;
+use App\Livewire\Admin\ManageAsramaStudents;
 use App\Livewire\Admin\ManageMusyrifah;
 use App\Livewire\Admin\ManageRaporMasters;
 use App\Livewire\Admin\ManageTasks;
@@ -73,6 +74,7 @@ Route::middleware(['auth', EnsureActive::class])->group(function () {
         return redirect()->route('admin.academic-settings');
     })->name('admin.assessment-periods');
     Route::get('admin/users', ManageMusyrifah::class)->name('admin.users');
+    Route::get('admin/asramas/{asrama}/santri', ManageAsramaStudents::class)->name('admin.asrama-students');
     Route::get('admin/asramas', ManageAsrama::class)->name('admin.asramas');
     Route::get('admin/tasks', ManageTasks::class)->name('admin.tasks');
 });

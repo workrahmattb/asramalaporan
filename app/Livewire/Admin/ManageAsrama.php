@@ -6,9 +6,12 @@ use App\Models\Asrama;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class ManageAsrama extends Component
 {
+    use WithPagination;
+
     #[Locked]
     public ?int $editId = null;
 
@@ -50,7 +53,7 @@ class ManageAsrama extends Component
 
     public function cancel(): void
     {
-        $this->reset();
+        $this->resetExcept('paginators');
         $this->resetValidation();
     }
 
@@ -67,6 +70,6 @@ class ManageAsrama extends Component
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
-        return view('livewire.admin.asrama', ['records' => Asrama::orderBy('id')->get()])->layout('layouts.simus');
+        return view('livewire.admin.asrama', ['records' => Asrama::withCount('currentPlacements')->orderBy('id')->paginate(10)])->layout('layouts.simus');
     }
 }

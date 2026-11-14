@@ -54,3 +54,33 @@
 .missing-pagination{border-top:1px solid var(--line);padding-top:1rem;margin-top:.25rem;display:grid;gap:.75rem}.missing-pagination>div{display:flex;gap:.5rem;justify-content:space-between;flex-wrap:wrap}.missing-pagination button{flex:1;font-size:.8125rem}
 
 .form-wide{grid-column:1/-1}.student-list{display:grid;gap:1rem}.student-card{display:flex;align-items:center;justify-content:space-between;gap:1rem}.student-card>div{min-width:0;overflow-wrap:anywhere}.student-card .status-badge{margin-top:.65rem}.student-card>button{flex-shrink:0}.student-prose{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75;font-size:.9375rem}.guidance-follow-up{border-left:3px solid var(--accent);padding:.75rem 1rem;margin-top:1rem;background:var(--canvas);border-radius:.5rem}.guidance-follow-up>strong{font-size:.8125rem}.assessment-item{border-top:1px solid var(--line);margin-top:1rem;padding-top:1rem}.assessment-item>div{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}.status-approved{background:var(--soft);color:var(--accent)}.student-home-panel{margin-bottom:1.75rem}.pembina-app .student-prose{font-size:.875rem}@media(max-width:30rem){.student-card{align-items:flex-start;flex-wrap:wrap}.student-card>button{width:100%}}
+
+/* Keep the history month and status controls contained on narrow mobile screens. */
+.pembina-app .pembina-history-filters{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+.pembina-app .pembina-history-filters>label{min-width:0}
+.pembina-app .pembina-history-filters>label>input,
+.pembina-app .pembina-history-filters>label>select{display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0;height:3.125rem;margin-top:.5rem}
+.pembina-app .pembina-history-filters input[type=month]::-webkit-date-and-time-value{min-width:0;text-align:left}
+@media(max-width:30rem){.pembina-app .pembina-history-filters{grid-template-columns:minmax(0,1fr);gap:1rem}}
+
+/* Quiet, separated pagination controls; retain Livewire's existing navigation. */
+.simus-app nav[aria-label="Pagination Navigation"] .shadow-sm{box-shadow:none;gap:.375rem;flex-wrap:wrap}
+.simus-app nav[aria-label="Pagination Navigation"]>div:last-child{gap:1rem;flex-wrap:wrap}
+.simus-app nav[aria-label="Pagination Navigation"] :is(button,[aria-current="page"]>span,[aria-disabled="true"]>span),
+.simus-app nav[aria-label="Pagination Navigation"]>div:first-child>span>span{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:2.75rem;min-height:2.75rem;margin:0;padding:.5rem .75rem;border:1px solid var(--line);border-radius:.6rem;background:var(--surface);color:var(--secondary);box-shadow:none;font-size:.875rem;font-weight:500;line-height:1.25}
+.simus-app nav[aria-label="Pagination Navigation"] button:hover{background:var(--soft);color:var(--accent);filter:none}
+.simus-app nav[aria-label="Pagination Navigation"] [aria-current="page"]>span{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:650}
+.simus-app nav[aria-label="Pagination Navigation"] [aria-disabled="true"]>span,
+.simus-app nav[aria-label="Pagination Navigation"]>div:first-child>span>span{opacity:.45;cursor:default}
+.simus-app nav[aria-label="Pagination Navigation"] svg{width:1.125rem;height:1.125rem}
+.simus-app nav[aria-label="Pagination Navigation"] button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.simus-app nav[aria-label="Pagination Navigation"] p{color:var(--secondary);font-size:.8125rem}
+
+/* Inline student selection follows the dorm membership flow. */
+.asrama-student-picker{position:relative}
+.asrama-selected-student{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem;border:1px solid var(--line);border-radius:.75rem;background:var(--soft)}
+.asrama-student-options{position:relative;z-index:10;margin-top:.5rem;padding:.75rem;background:var(--surface);border:1px solid var(--line);border-radius:.75rem;max-height:24rem;overflow-y:auto;box-shadow:0 8px 24px #172c2b0a}
+.simus-app .asrama-student-option{display:flex;width:100%;justify-content:space-between;gap:1rem;text-align:left;background:var(--surface);color:var(--text);border:0;border-bottom:1px solid var(--line);border-radius:0;padding:.875rem .5rem;font-weight:400;min-height:3.5rem}
+.simus-app .asrama-student-option:hover{background:var(--soft);filter:none}
+.asrama-student-option strong{font-weight:600}
+@media(max-width:30rem){.asrama-selected-student{align-items:flex-start;flex-direction:column}}
