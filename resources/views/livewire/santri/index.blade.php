@@ -32,8 +32,16 @@
 <p class="caption form-wide">Santri yang belum ditempatkan hanya terlihat oleh admin. Pilih asrama sebelum pembina mengisi catatan dan penilaian. Jika kategori kosong, kategori mengikuti asrama yang dipilih.</p>
 <label class="flex gap-3 items-center"><input type="checkbox" wire:model="is_active">Santri aktif</label></x-admin-data-modal>@endcan
 @can('manage', \App\Models\Santri::class)
-<flux:modal name="santri-deletion" wire:model="confirmingDeletion" wire:close="cancelDelete" class="admin-editor" :dismissible="false" :closable="false">
-    <div class="space-y-4"><h2>Hapus data santri?</h2><p>Hapus <strong>{{ $pendingDeletion?->name }}</strong> beserta penempatan asramanya? Penghapusan ini permanen dan tidak dapat dibatalkan.</p><p class="caption">Santri yang sudah memiliki catatan, nilai, atau rapor tidak dapat dihapus. Gunakan Edit untuk menonaktifkan santri tersebut.</p>@error('deletion')<p class="notice notice-error" role="alert">{{ $message }}</p>@enderror<div class="flex justify-end gap-3"><button type="button" class="button-secondary" wire:click="cancelDelete">Batal</button><button type="button" wire:click="delete" wire:loading.attr="disabled">Ya, hapus santri</button></div></div>
+<flux:modal name="santri-deletion" wire:model="confirmingDeletion" wire:close="cancelDelete" class="admin-editor santri-delete-dialog" :dismissible="false" :closable="false">
+    <div class="santri-delete-body">
+        <span class="santri-delete-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></span>
+        <h2>Hapus data santri?</h2>
+        <p class="santri-delete-description">Data santri dan penempatan asramanya akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.</p>
+        <div class="santri-delete-person"><span class="caption">Santri yang akan dihapus</span><strong>{{ $pendingDeletion?->name }}</strong><span class="caption">NISN {{ $pendingDeletion?->nisn ?: 'belum diisi' }}</span></div>
+        <p class="santri-delete-hint">Santri dengan catatan, nilai, atau rapor tetap terlindungi. Untuk santri tersebut, gunakan pilihan nonaktifkan melalui Edit.</p>
+        @error('deletion')<p class="notice notice-error" role="alert">{{ $message }}</p>@enderror
+    </div>
+    <div class="santri-delete-footer"><button type="button" class="button-secondary" wire:click="cancelDelete" autofocus>Batal</button><button type="button" class="santri-delete-confirm" wire:click="delete" wire:loading.attr="disabled" wire:target="delete"><span wire:loading.remove wire:target="delete">Ya, hapus santri</span><span wire:loading wire:target="delete">Menghapus…</span></button></div>
 </flux:modal>
 @endcan
 </div>
