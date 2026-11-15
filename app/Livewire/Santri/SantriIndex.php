@@ -8,6 +8,7 @@ use App\Models\Santri;
 use App\Services\AcademicPeriodService;
 use App\Services\SantriService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -35,6 +36,11 @@ class SantriIndex extends Component
     public ?int $editId = null;
 
     public bool $showEditor = false;
+
+    #[Locked]
+    public ?int $deleteId = null;
+
+    public bool $confirmingDeletion = false;
 
     public string $name = '';
 
@@ -111,10 +117,38 @@ class SantriIndex extends Component
         session()->flash('success', 'Data santri dan penempatan disimpan.');
     }
 
+    public function confirmDelete(int $id): void
+    {
+        $this->authorize('manage', Santri::class);
+        Santri::findOrFail($id);
+        $this->resetValidation();
+        $this->deleteId = $id;
+        $this->confirmingDeletion = true;
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->reset('deleteId', 'confirmingDeletion');
+        $this->resetValidation('deletion');
+    }
+
+    public function delete(): void
+    {
+        $this->authorize('manage', Santri::class);
+        if ($this->deleteId === null) {
+            throw ValidationException::withMessages(['deletion' => 'Pilih santri yang akan dihapus terlebih dahulu.']);
+        }
+        app(SantriService::class)->delete(auth()->user(), $this->deleteId);
+        $this->cancelDelete();
+        $this->cancel();
+        $this->resetPage();
+        session()->flash('success', 'Data santri berhasil dihapus.');
+    }
+
     public function render(): View
     {
         $u = auth()->user();
-        $this->validate(['periodId' => 'nullable|integer', 'asramaId' => 'nullable|integer', 'progress' => 'in:,incomplete', 'active' => 'in:,0,1', 'search' => 'string|max:255']);
+        validator(['periodId' => $this->periodId, 'asramaId' => $this->asramaId, 'progress' => $this->progress, 'active' => $this->active, 'search' => $this->search], ['periodId' => 'nullable|integer', 'asramaId' => 'nullable|integer', 'progress' => 'in:,incomplete', 'active' => 'in:,0,1', 'search' => 'string|max:255'])->validate();
         $q = Santri::visibleTo($u)->with('currentPlacement.asrama')->when($this->search, fn ($q) => $q->where(fn ($q) => $q->where('name', 'like', '%'.$this->search.'%')->orWhere('nisn', 'like', '%'.$this->search.'%')))->when($this->asramaId, fn ($q) => $q->whereHas('currentPlacement', fn ($q) => $q->where('asrama_id', $this->asramaId)));
         if ($u->isAdmin()) {
             if ($this->active !== '') {
@@ -127,6 +161,6 @@ class SantriIndex extends Component
             $q->whereDoesntHave('assessments', fn ($q) => $q->visibleTo($u)->where('assessment_period_id', $this->periodId)->whereIn('status', ['submitted', 'approved']));
         }
 
-        return view('livewire.santri.index', ['santris' => $q->orderBy('name')->orderBy('id')->paginate(10), 'asramas' => $u->isAdmin() ? Asrama::where('is_active', true)->get() : $u->assignedAsramas()->get(), 'periods' => AssessmentPeriod::orderByDesc('start_date')->get()])->layout('layouts.simus');
+        return view('livewire.santri.index', ['pendingDeletion' => $this->deleteId ? Santri::find($this->deleteId) : null, 'santris' => $q->orderBy('name')->orderBy('id')->paginate(10), 'asramas' => $u->isAdmin() ? Asrama::where('is_active', true)->get() : $u->assignedAsramas()->get(), 'periods' => AssessmentPeriod::orderByDesc('start_date')->get()])->layout('layouts.simus');
     }
 }

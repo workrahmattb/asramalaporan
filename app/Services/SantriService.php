@@ -68,6 +68,19 @@ class SantriService
         });
     }
 
+    public function delete(User $user, int $id): void
+    {
+        Gate::forUser($user)->authorize('manage', Santri::class);
+        DB::transaction(function () use ($id) {
+            $santri = Santri::whereKey($id)->lockForUpdate()->firstOrFail();
+            if ($santri->guidanceNotes()->exists() || $santri->assessments()->exists()) {
+                throw ValidationException::withMessages(['deletion' => 'Santri sudah memiliki catatan atau penilaian. Nonaktifkan santri agar riwayatnya tetap tersimpan.']);
+            }
+            $santri->placements()->delete();
+            $santri->delete();
+        }, 3);
+    }
+
     /** @param array<string,mixed> $data */
     public function addNote(User $user, Santri $santri, array $data): GuidanceNote
     {

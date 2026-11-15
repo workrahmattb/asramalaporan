@@ -1,4 +1,5 @@
 <div class="space-y-5">
+    @if(session('success'))<p class="notice notice-success" role="status">{{ session('success') }}</p>@endif
     <div class="page-heading"><div><p class="eyebrow">Pembinaan santri</p><h1>{{ auth()->user()->isPembina() ? 'Santri binaanku' : 'Data santri' }}</h1><p>Identitas santri sesuai penempatan asrama.</p></div>@can('manage', \App\Models\Santri::class)<button wire:click="create"><x-simus-icon name="plus"/>Tambah santri</button>@endcan</div>
     <section class="panel filter-grid" aria-label="Filter santri">
         <label>Cari santri<input type="search" wire:model.live.debounce.300ms="search" placeholder="Nama atau NISN"></label>
@@ -13,7 +14,7 @@
     <p class="caption" role="status" wire:loading>Memperbarui daftar santri…</p>
     <div class="panel table-wrap"><table><caption class="sr-only">Identitas santri dan orang tua sesuai asrama</caption><thead><tr><th>Nama / NISN</th><th>Asrama</th><th>Tempat, tanggal lahir</th><th>Nama ayah</th><th>Nama ibu</th>@can('manage', \App\Models\Santri::class)<th>Aksi</th>@endcan</tr></thead><tbody>
     @forelse($santris as $student)
-        <tr wire:key="santri-{{ $student->id }}"><td><a wire:navigate class="text-link" href="{{ route('santri.show', $student) }}">{{ $student->name }}</a><small class="block muted">{{ $student->nisn ?: 'NISN belum diisi' }}</small></td><td>{{ $student->currentPlacement?->asrama?->name ?? 'Belum ditempatkan' }}</td><td>{{ $student->birth_place ?: '—' }}{{ $student->birth_date ? ', '.$student->birth_date->format('d/m/Y') : '' }}</td><td>{{ $student->father_name ?: '—' }}</td><td>{{ $student->mother_name ?: '—' }}</td>@can('manage', \App\Models\Santri::class)<td><button class="button-secondary" wire:click="edit({{ $student->id }})">Edit</button></td>@endcan</tr>
+        <tr wire:key="santri-{{ $student->id }}"><td><a wire:navigate class="text-link" href="{{ route('santri.show', $student) }}">{{ $student->name }}</a><small class="block muted">{{ $student->nisn ?: 'NISN belum diisi' }}</small></td><td>{{ $student->currentPlacement?->asrama?->name ?? 'Belum ditempatkan' }}</td><td>{{ $student->birth_place ?: '—' }}{{ $student->birth_date ? ', '.$student->birth_date->format('d/m/Y') : '' }}</td><td>{{ $student->father_name ?: '—' }}</td><td>{{ $student->mother_name ?: '—' }}</td>@can('manage', \App\Models\Santri::class)<td><div class="flex flex-wrap gap-2"><button type="button" class="button-secondary" wire:click="edit({{ $student->id }})">Edit</button><button type="button" class="button-secondary" wire:click="confirmDelete({{ $student->id }})" aria-label="Hapus {{ $student->name }}">Hapus</button></div></td>@endcan</tr>
     @empty<tr><td colspan="{{ auth()->user()->isAdmin() ? 6 : 5 }}" class="table-empty">Belum ada santri sesuai asrama atau pencarian ini.</td></tr>@endforelse
     </tbody></table></div>
     {{ $santris->links() }}
@@ -30,4 +31,9 @@
 <label>Asrama (opsional)<select wire:model="asrama_id"><option value="">Belum ditempatkan</option>@foreach($asramas as $a)<option value="{{ $a->id }}">{{ $a->name }} {{ $a->gender?'('.$a->gender.')':'' }}</option>@endforeach</select>@error('asrama_id')<span class="field-error">{{ $message }}</span>@enderror</label>
 <p class="caption form-wide">Santri yang belum ditempatkan hanya terlihat oleh admin. Pilih asrama sebelum pembina mengisi catatan dan penilaian. Jika kategori kosong, kategori mengikuti asrama yang dipilih.</p>
 <label class="flex gap-3 items-center"><input type="checkbox" wire:model="is_active">Santri aktif</label></x-admin-data-modal>@endcan
+@can('manage', \App\Models\Santri::class)
+<flux:modal name="santri-deletion" wire:model="confirmingDeletion" wire:close="cancelDelete" class="admin-editor" :dismissible="false" :closable="false">
+    <div class="space-y-4"><h2>Hapus data santri?</h2><p>Hapus <strong>{{ $pendingDeletion?->name }}</strong> beserta penempatan asramanya? Penghapusan ini permanen dan tidak dapat dibatalkan.</p><p class="caption">Santri yang sudah memiliki catatan, nilai, atau rapor tidak dapat dihapus. Gunakan Edit untuk menonaktifkan santri tersebut.</p>@error('deletion')<p class="notice notice-error" role="alert">{{ $message }}</p>@enderror<div class="flex justify-end gap-3"><button type="button" class="button-secondary" wire:click="cancelDelete">Batal</button><button type="button" wire:click="delete" wire:loading.attr="disabled">Ya, hapus santri</button></div></div>
+</flux:modal>
+@endcan
 </div>
