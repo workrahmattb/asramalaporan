@@ -34,7 +34,14 @@
     </tbody></table></div>
     {{ $students->links() }}
     </section>
-    <flux:modal name="asrama-student-removal" wire:model="confirmingRemoval" wire:close="cancelRemove" class="admin-editor" :dismissible="false" :closable="false">
-        <div class="space-y-4"><h2>Konfirmasi keluarkan santri</h2><p>Keluarkan <strong>{{ $pendingRemoval?->name }}</strong> dari {{ $asrama->name }}?</p><p class="caption">Identitas, catatan, nilai, dan rapor tetap tersimpan.</p><div class="flex justify-end gap-3"><button type="button" class="button-secondary" wire:click="cancelRemove">Batal</button><button type="button" wire:click="remove" wire:loading.attr="disabled">Keluarkan dari asrama</button></div></div>
+    <flux:modal name="asrama-student-removal" wire:model="confirmingRemoval" wire:close="cancelRemove" class="admin-editor santri-delete-dialog" :dismissible="false" :closable="false">
+        <div class="santri-delete-body">
+            <span class="santri-delete-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8l4 4-4 4M18 12H8M10 4H4v16h6"/></svg></span>
+            <h2>Keluarkan santri dari asrama?</h2>
+            <p class="santri-delete-description">Penempatan santri di asrama <strong>{{ $asrama->name }}</strong> akan diakhiri.</p>
+            <div class="santri-delete-person"><span class="caption">Santri yang akan dikeluarkan</span><strong>{{ $pendingRemoval?->name }}</strong><span class="caption">NISN {{ $pendingRemoval?->nisn ?: 'belum diisi' }}</span></div>
+            <p class="santri-delete-hint">Identitas, catatan, nilai, dan rapor tetap tersimpan. Santri dapat ditempatkan kembali melalui Kelola Santri.</p>
+        </div>
+        <div class="santri-delete-footer"><button type="button" class="button-secondary" wire:click="cancelRemove" autofocus>Batal</button><button type="button" class="santri-delete-confirm" wire:click="remove" wire:loading.attr="disabled" wire:target="remove"><span wire:loading.remove wire:target="remove">Keluarkan dari asrama</span><span wire:loading wire:target="remove">Memproses…</span></button></div>
     </flux:modal>
 </div>
