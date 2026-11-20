@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Admin\ManageAsrama;
 use App\Livewire\Admin\ManageMusyrifah;
 use App\Livewire\Admin\ManageTasks;
 use App\Livewire\Reports\MonthlyRecap;
@@ -16,6 +17,26 @@ use ZipArchive;
 class RemainingListPaginationTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_asramas_sort_by_name_and_search_resets_pagination_without_editor_clearing_search(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        foreach (range(11, 1) as $i) {
+            Asrama::create(['name' => sprintf('Asrama %02d', $i), 'code' => 'A'.$i, 'unit' => $i === 11 ? 'Gedung Timur' : 'Gedung Barat']);
+        }
+        $last = Asrama::where('code', 'A11')->firstOrFail();
+        $component = Livewire::actingAs($admin)->test(ManageAsrama::class)
+            ->assertSeeInOrder(['Asrama 01', 'Asrama 02', 'Asrama 10'])->assertDontSee('Asrama 11')
+            ->assertViewHas('records', fn ($records) => $records->perPage() === 10 && $records->total() === 11)
+            ->call('setPage', 2)->assertSee('Asrama 11')->assertDontSee('Asrama 01')
+            ->set('search', '  Asrama 11  ')->assertSet('paginators.page', 1)->assertViewHas('records', fn ($records) => $records->total() === 1)
+            ->call('edit', $last->id)->call('cancel')->assertSet('search', '  Asrama 11  ')
+            ->call('edit', $last->id)->set('unit', 'Gedung Timur Baru')->call('save')->assertHasNoErrors()->assertSet('search', '  Asrama 11  ')
+            ->set('search', 'A11')->assertViewHas('records', fn ($records) => $records->total() === 1)
+            ->set('search', 'Timur Baru')->assertViewHas('records', fn ($records) => $records->total() === 1)
+            ->set('search', 'Tidak ditemukan')->assertSee('Tidak ada asrama sesuai pencarian.')->assertViewHas('records', fn ($records) => $records->total() === 0);
+        $component->set('search', '')->assertViewHas('records', fn ($records) => $records->total() === 11);
+    }
 
     public function test_pembina_paginates_and_filters_reset_page_while_popup_preserves_it(): void
     {

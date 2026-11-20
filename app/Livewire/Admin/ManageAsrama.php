@@ -17,6 +17,13 @@ class ManageAsrama extends Component
 
     public bool $showEditor = false;
 
+    public string $search = '';
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
     public string $name = '';
 
     public string $code = '';
@@ -53,7 +60,7 @@ class ManageAsrama extends Component
 
     public function cancel(): void
     {
-        $this->resetExcept('paginators');
+        $this->resetExcept('paginators', 'search');
         $this->resetValidation();
     }
 
@@ -70,6 +77,8 @@ class ManageAsrama extends Component
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
-        return view('livewire.admin.asrama', ['records' => Asrama::withCount('currentPlacements')->orderBy('id')->paginate(10)])->layout('layouts.simus');
+        validator(['search' => $this->search], ['search' => 'string|max:255'])->validate();
+
+        return view('livewire.admin.asrama', ['records' => Asrama::withCount('currentPlacements')->when(trim($this->search) !== '', fn ($q) => $q->where(fn ($q) => $q->where('name', 'like', '%'.trim($this->search).'%')->orWhere('code', 'like', '%'.trim($this->search).'%')->orWhere('unit', 'like', '%'.trim($this->search).'%')))->orderBy('name')->orderBy('id')->paginate(10)])->layout('layouts.simus');
     }
 }
