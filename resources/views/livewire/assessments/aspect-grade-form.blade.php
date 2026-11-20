@@ -1,9 +1,9 @@
-<div class="space-y-5" x-data="{dirty:false,saved:false}" @change="dirty=true;saved=false" @grades-loaded.window="dirty=false" @grades-saved.window="saved=true" x-on:livewire:navigate.document="if(dirty &amp;&amp; !confirm('Ada nilai yang belum disimpan. Tinggalkan halaman?')) $event.preventDefault()" @beforeunload.window="if(dirty){$event.preventDefault();$event.returnValue=''}">
+<div class="space-y-5" x-data="{dirty:false,saved:false}" @change="dirty=true;saved=false" @grades-loaded.window="dirty=false;saved=false" @grades-saved.window="dirty=false;saved=true" x-on:livewire:navigate.document="if(dirty &amp;&amp; !confirm('Ada nilai yang belum disimpan. Tinggalkan halaman?')) $event.preventDefault()" @beforeunload.window="if(dirty){$event.preventDefault();$event.returnValue=''}">
     <a wire:navigate class="text-link" href="{{ route('santri.rapor', ['asramaId' => $asrama->id]) }}">← Rapor Asrama</a>
     <div class="page-heading"><div><p class="eyebrow">Input nilai per aspek</p><h1>{{ $asrama->name }}</h1><p>{{ $aspect->period->name }} · {{ $aspect->title }}</p></div></div>
     @if($errors->any())<div class="notice notice-error" role="alert"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
     <section class="panel"><h2>{{ $aspect->title }}</h2><p class="student-prose mt-3">{{ $aspect->indicator ?: 'Indikator belum diisi pada periode ini.' }}</p><p class="caption mt-3">Isi nilai untuk santri pada halaman ini. Mengosongkan nilai akan menghapus nilai aspek ini setelah disimpan. Aspek lain tetap tersimpan.</p></section>
-    <form wire:submit="save" class="space-y-4">
+    <form wire:submit="save" @submit="saved=false" class="space-y-4">
     <div class="panel table-wrap"><table><caption class="sr-only">Nilai {{ $aspect->title }} santri {{ $asrama->name }}</caption><thead><tr><th>Santri</th><th>Nilai</th></tr></thead><tbody>
     @forelse($students as $student)
         @php($report = $student->assessments->first())
@@ -15,7 +15,11 @@
         </td></tr>
     @empty<tr><td colspan="2" class="table-empty">Belum ada santri aktif di asrama ini.</td></tr>@endforelse
     </tbody></table></div>
-    <div class="form-actions"><p class="caption" role="status" x-text="dirty ? 'Ada nilai yang belum disimpan.' : (saved ? 'Nilai halaman ini berhasil disimpan.' : 'Nilai disimpan sebagai draft rapor.')"></p><button type="submit" wire:loading.attr="disabled" @disabled(count($versions) === 0)>Simpan nilai halaman ini</button></div>
+    <div x-show="saved" x-cloak class="notice notice-success" role="status" aria-live="polite" aria-atomic="true">
+        <strong class="block">Nilai berhasil disimpan</strong>
+        <p>Nilai pada halaman ini sudah tersimpan sebagai draft rapor. Kamu bisa melanjutkan ke halaman atau aspek berikutnya.</p>
+    </div>
+    <div class="form-actions"><p class="caption" role="status" x-text="dirty ? 'Ada nilai yang belum disimpan.' : (saved ? 'Nilai halaman ini berhasil disimpan.' : 'Nilai disimpan sebagai draft rapor.')"></p><button type="submit" wire:loading.attr="disabled" wire:target="save" @disabled(count($versions) === 0)><span wire:loading.remove wire:target="save">Simpan nilai halaman ini</span><span wire:loading wire:target="save">Menyimpan…</span></button></div>
     </form>
     <nav class="flex justify-between items-center gap-3" aria-label="Halaman input nilai"><button class="button-secondary" wire:click="goToPage({{ $page - 1 }})" @disabled($page <= 1) x-on:click.capture="if(dirty &amp;&amp; !confirm('Nilai belum disimpan. Pindah halaman?')) $event.stopImmediatePropagation()">Sebelumnya</button><span class="caption">{{ $page }} / {{ $students->lastPage() }}</span><button class="button-secondary" wire:click="goToPage({{ $page + 1 }})" @disabled(!$students->hasMorePages()) x-on:click.capture="if(dirty &amp;&amp; !confirm('Nilai belum disimpan. Pindah halaman?')) $event.stopImmediatePropagation()">Berikutnya</button></nav>
 </div>

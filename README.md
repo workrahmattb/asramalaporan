@@ -51,7 +51,7 @@ npm run build
 
 Arahkan document root ke `public`, gunakan HTTPS, `APP_DEBUG=false`, set kredensial database dan layanan email untuk reset password, dan jalankan migrasi, build, serta `php artisan optimize`. PHP memerlukan ekstensi database, fileinfo, dan zip (export XLSX). Pastikan `storage` dan `bootstrap/cache` dapat ditulis. Tidak perlu `storage:link` untuk foto laporan privat. Atur `upload_max_filesize` minimal 2M dan `post_max_size` di atas 10M.
 
-Backup database dan `storage/app/private` harus dijadwalkan pada hosting. Deployment hosting, konfigurasi email, uji MySQL/MariaDB, dan pemeriksaan visual pada perangkat fisik belum dilakukan. Notifikasi WhatsApp, PWA, PDF, penilaian berbobot, dan integrasi eksternal termasuk fase lanjutan PRD.
+Backup database dan `storage/app/private` harus dijadwalkan pada hosting. Deployment hosting, konfigurasi email, uji MySQL/MariaDB, dan pemeriksaan visual pada perangkat fisik belum dilakukan. Notifikasi WhatsApp, PWA, penilaian berbobot, dan integrasi eksternal termasuk fase lanjutan PRD. Cetak rapor PDF langsung sudah tersedia.
 
 
 ## Seeder data awal pembina
@@ -131,7 +131,7 @@ Modul ini terpisah dari laporan kegiatan harian dan tidak mencakup absensi.
 2. Admin membuka **Tahun ajaran & semester**, menyiapkan master tahun ajaran, master aspek beserta indikator, lalu membuat semester Ganjil/Genap dengan memilih aspek dari master. Semester baru menggunakan pilihan A/B/C/D secara default. Status Aktif/Tidak aktif dikendalikan admin; tanggal menjadi keterangan, bukan pembuka/penutup otomatis. Mengaktifkan satu periode menonaktifkan periode lain. Aspek dan pilihan nilai dikunci setelah penilaian pertama tersimpan; gunakan periode baru untuk rubrik berbeda.
 3. Musyrif/Musyrifah membuka tab **Santri** untuk melihat tabel identitas santri aktif dalam asrama penugasannya. Tombol **Rapor Asrama** di atas tabel membuka daftar pengisian nilai memakai periode aktif admin. Catatan perkembangan/bimbingan/tindak lanjut tetap tersedia pada profil santri. Pilih asrama dan satu aspek, isi nilai banyak santri dalam tabel, kemudian simpan halaman tersebut. Setelah semua aspek terisi, lengkapi catatan per santri melalui Catatan & kirim rapor. Semua aspek, perkembangan, dan fokus pembinaan harus terisi sebelum dikirim.
 4. Koordinator memeriksa penilaian asrama penugasannya melalui **Pemeriksaan penilaian**. Admin dapat memeriksa seluruh asrama. Penilaian dapat disetujui atau dikembalikan dengan catatan revisi.
-5. Rapor yang disetujui dapat dibuka dan dicetak/disimpan sebagai PDF melalui fitur cetak browser. Admin dapat membukanya kembali untuk revisi dengan alasan wajib.
+5. Rapor yang sudah tersimpan dapat dibuka dan dibuka langsung sebagai PDF A4 untuk dicetak atau diunduh. Admin dapat membukanya kembali untuk revisi dengan alasan wajib.
 
 Ada satu penilaian per santri per periode, digunakan bersama oleh pembina yang berwenang. Pemeriksaan versi mencegah perubahan pembina lain tertimpa. Identitas, asrama, nama periode, aspek, dan pilihan nilai disalin saat penilaian pertama dibuat agar riwayat tetap konsisten. Tindakan simpan, pemeriksaan, dan buka kembali dicatat pada `assessment_audits`. Catatan pembinaan tidak otomatis menjadi nilai, skor, atau peringkat.
 
@@ -194,7 +194,7 @@ Semester baru menggunakan A/B/C/D secara default. Pilihan khusus masih dapat dit
 
 Setelah aspek lengkap, pembina membuka **Catatan & kirim rapor**, mengisi perkembangan/fokus pembinaan, lalu mengirim untuk pemeriksaan. Nilai pada halaman catatan ditampilkan sebagai ringkasan; perubahan nilai pembina dilakukan dari tabel per aspek. Rapor terkirim/disetujui dikunci dari pengisian batch. Koordinator/admin dapat meminta revisi; admin dapat membuka kembali rapor disetujui dengan alasan.
 
-Leger tersedia sebagai file Excel `.xlsx` per asrama/periode, termasuk status dan santri yang belum dinilai. Cetak gabungan per asrama hanya memuat rapor disetujui; gunakan cetak browser untuk menyimpan PDF. Tidak ada dependency PDF baru, absensi, skor otomatis, atau ranking.
+Leger tersedia sebagai file Excel `.xlsx` per asrama/periode, termasuk status dan santri yang belum dinilai. Cetak gabungan per asrama memuat seluruh rapor tersimpan tanpa syarat persetujuan dan langsung menghasilkan satu PDF. Tidak ada absensi, skor otomatis, atau ranking.
 
 Migrasi `2026_11_14_170909_add_rapor_masters_and_indicators` bersifat menambah data/kolom dan menghubungkan aspek lama ke master. Tahun ajaran periode lama dibiarkan kosong agar tidak menebak data historis; periode lama tetap dapat digunakan. Mengaktifkan tahun ajaran baru menutup periode dari tahun lain, termasuk periode lama tanpa tahun. Tidak perlu seed ulang.
 
@@ -277,3 +277,11 @@ php artisan up
 Periksa login, CSS, laporan lama, foto, dan daftar santri/penempatan setelah update. Jika aplikasi memakai queue worker, restart worker melalui pengelola proses hosting setelah pembaruan. Jangan hapus aset lama di document root selama pembaruan agar halaman yang masih terbuka tidak kehilangan asetnya.
 
 Untuk pembaruan ini **jangan** menjalankan `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`, seeder, `composer run setup`, atau `key:generate`. Jangan mengganti `.env`, APP_KEY, database, maupun storage dengan salinan lokal. Jika update gagal, biarkan maintenance aktif sambil memeriksa error; jangan mencoba reset database atau rollback migration sebagai perbaikan otomatis.
+
+## Cetak rapor PDF langsung
+
+Cetak per santri dan satu asrama menghasilkan `application/pdf` langsung di tab baru, menggunakan Dompdf (dependency production). Format A4 mengikuti contoh laporan bilingual: identitas tersimpan pada rapor, tabel No/Aspek/Indikator/Nilai, catatan dan fokus pembinaan, serta area tanda tangan. Nilai dan indikator tidak dihitung ulang dari master terbaru. Semua rapor tersimpan dapat dicetak tanpa persetujuan (draft, submitted, revision, approved); pembina tetap dibatasi asrama penugasannya, admin dapat mencetak seluruh asrama. PDF dikirim privat/no-store dan tidak disimpan di direktori publik.
+
+Kota/nama penandatangan bawaan ada di `config/rapor.php`: Teluk Kuantan; Septian Kusuma Wijaya, A.Md (Kepala Pengasuhan); KH. Dr. Hamdani Purba, Lc., MA (Pimpinan Pondok). Pembina mengikuti akun pengisi rapor, Walisantri disediakan ruang tanda tangan. Tanggal mengikuti tanggal persetujuan jika tersedia, atau tanggal cetak untuk rapor yang belum disetujui. Jika diperlukan, sesuaikan lewat `.env` hosting: `RAPOR_CITY`, `RAPOR_HEAD_OF_CARE`, `RAPOR_DIRECTOR`, lalu bangun ulang cache konfigurasi.
+
+Saat deploy fitur PDF, wajib sertakan `composer.json` dan `composer.lock`, jalankan `composer install --no-dev --prefer-dist --optimize-autoloader` setelah pull, lalu `php artisan optimize:clear` dan `php artisan optimize`. Composer memasang paket sesuai lock; jangan memakai composer update di hosting. Tidak perlu Chrome, Node, migration baru, seeder, atau mengubah data yang sudah tersimpan. Pastikan direktori storage dan direktori temporary PHP hosting writable. Uji satu rapor dan satu asrama setelah update. Sembilan aspek seperti contoh muat satu halaman; konten yang lebih panjang dapat berlanjut ke halaman berikutnya.

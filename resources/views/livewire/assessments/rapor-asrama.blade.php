@@ -12,7 +12,7 @@
         @if($selectedAsrama && $selectedAspect && (auth()->user()->isPembina() || auth()->user()->isAdmin()))
         <section class="panel"><h2>{{ $selectedAspect->title }}</h2><p class="student-prose caption mt-3">{{ $selectedAspect->indicator ?: 'Indikator belum diisi.' }}</p><a wire:navigate class="btn mt-4" href="{{ route('santri.grades', [$selectedAsrama, $selectedAspect]) }}">Isi nilai seluruh santri</a></section>
         @else<p class="caption">Pilih asrama dan aspek di atas untuk mengisi nilai seluruh santri dalam tabel.</p>@endif
-        <div class="panel-heading"><h2>Kelengkapan & rapor santri</h2></div>
+        <div class="panel-heading"><h2>Kelengkapan & rapor santri</h2></div><p class="caption">Pilih satu asrama untuk mencetak rapor satu asrama. Rapor yang sudah tersimpan dapat langsung dicetak tanpa persetujuan.</p>
         @if($selectedAsrama)<div class="flex flex-wrap gap-3"><a class="btn button-secondary" href="{{ route('santri.leger', [$selectedAsrama, $period]) }}">Unduh leger Excel</a><a class="btn button-secondary" href="{{ route('santri.print-asrama', [$selectedAsrama, $period]) }}" target="_blank" rel="noopener">Cetak rapor satu asrama</a></div>@endif
         <div class="panel table-wrap"><table><caption class="sr-only">Rapor santri pada periode aktif</caption><thead><tr><th>Santri / asrama</th><th>Status</th><th>Penilaian</th></tr></thead><tbody>
         @forelse($students as $student)
@@ -21,6 +21,7 @@
             @if($assessment)
                 @can('update', $assessment)<a wire:navigate class="text-link" href="{{ route('assessments.form', [$student, $period]) }}">Catatan & kirim rapor</a>@endcan
                 <a wire:navigate class="text-link" href="{{ route('assessments.show', $assessment) }}">Lihat rapor</a>
+                @can('print', $assessment)<a class="text-link" href="{{ route('assessments.print', $assessment) }}" target="_blank" rel="noopener">Cetak rapor</a>@endcan
             @else<span class="caption">Isi nilai melalui aspek di atas.</span>@endif
             </td></tr>
         @empty<tr><td colspan="3" class="table-empty">Belum ada santri sesuai asrama atau pencarian ini.</td></tr>@endforelse

@@ -72,7 +72,7 @@ class SantriGuidanceTest extends TestCase
         $this->actingAs($outside)->get('/santri/'.$this->santri->id)->assertForbidden();
         $this->get('/assessments/'.$report->id)->assertForbidden();
         $this->get('/assessments/'.$report->id.'/print')->assertForbidden();
-        $this->actingAs($this->pembina)->get('/assessments/'.$report->id.'/print')->assertForbidden();
+        $this->actingAs($this->pembina)->get('/assessments/'.$report->id.'/print')->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $this->assertFalse(Gate::forUser($this->coordinator)->allows('addNote', $this->santri));
         $this->assertFalse(Gate::forUser($this->pembina)->allows('review', $report));
     }
@@ -89,7 +89,8 @@ class SantriGuidanceTest extends TestCase
         $this->assertTrue(Gate::forUser($this->pembina)->allows('update', $report->fresh()));
         $report = $service->save($this->pembina, $this->santri, $this->period, $this->data(), $report->fresh()->version);
         $service->review($this->coordinator, $report, 'approved', 'Sudah diperiksa.');
-        $this->actingAs($this->pembina)->get('/assessments/'.$report->id.'/print')->assertOk()->assertSee('Santri Uji')->assertSee('Menjaga konsistensi.');
+        $this->actingAs($this->pembina)->get('/assessments/'.$report->id.'/print')->assertOk()->assertHeader('Content-Type', 'application/pdf')->assertHeader('Content-Disposition', 'inline; filename="rapor-santri-'.$report->id.'.pdf"');
+        $this->assertStringStartsWith('%PDF-', $this->get('/assessments/'.$report->id.'/print')->getContent());
         $this->santri->update(['name' => 'Nama baru']);
         $this->period->aspects()->first()->update(['title' => 'Aspek baru']);
         $this->assertSame('Santri Uji', $report->fresh()->student_name);

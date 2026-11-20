@@ -7,6 +7,7 @@ use App\Models\AssessmentAspect;
 use App\Models\AssessmentPeriod;
 use App\Models\Santri;
 use App\Models\SantriAssessment;
+use App\Services\AssessmentPdfService;
 use App\Services\XlsxExportService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -41,11 +42,11 @@ class AssessmentExportController extends Controller
         return $xlsx->download($rows, 'leger-asrama-'.$asrama->id.'-periode-'.$period->id.'.xlsx');
     }
 
-    public function printAsrama(Request $request, Asrama $asrama, AssessmentPeriod $period): Response
+    public function printAsrama(Request $request, Asrama $asrama, AssessmentPeriod $period, AssessmentPdfService $pdf): Response
     {
         $this->authorizeAsrama($request, $asrama);
-        $reports = SantriAssessment::visibleTo($request->user())->where('asrama_id', $asrama->id)->where('assessment_period_id', $period->id)->where('status', 'approved')->with('items', 'user', 'reviewer')->orderBy('student_name')->get();
+        $reports = SantriAssessment::visibleTo($request->user())->where('asrama_id', $asrama->id)->where('assessment_period_id', $period->id)->with('items', 'user', 'reviewer')->orderBy('student_name')->get();
 
-        return response()->view('assessments.print-asrama', compact('reports', 'asrama', 'period'))->header('Cache-Control', 'private, no-store');
+        return $pdf->render('assessments.print-asrama', compact('reports', 'asrama', 'period'), 'rapor-asrama-'.$asrama->id.'-periode-'.$period->id.'.pdf');
     }
 }

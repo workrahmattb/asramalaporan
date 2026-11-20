@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Livewire\Admin\ManageAssessmentPeriods;
 use App\Livewire\Admin\ManageRaporMasters;
 use App\Livewire\Assessments\AspectGradeForm;
+use App\Livewire\Assessments\AssessmentMonitoring;
+use App\Livewire\Assessments\RaporAsrama;
 use App\Models\AcademicYear;
 use App\Models\Asrama;
 use App\Models\AssessmentAspect;
@@ -170,7 +172,7 @@ class AspectGradeFlowTest extends TestCase
         $service->review($this->admin, $report, 'approved', 'Baik.');
         $bulk->save($this->pembina, $this->asrama, $this->aspect, [$this->second->id => ['rating' => 'C', 'version' => null]]);
         $this->second->update(['nisn' => '0098765432']);
-        $this->actingAs($this->pembina)->get(route('santri.print-asrama', [$this->asrama, $this->period]))->assertOk()->assertSee('Ahmad')->assertSee('Berbicara dengan santun.')->assertDontSee('Zaid');
+        $this->actingAs($this->pembina)->get(route('santri.print-asrama', [$this->asrama, $this->period]))->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $response = $this->get(route('santri.leger', [$this->asrama, $this->period]))->assertOk()->assertDownload();
         $zip = new ZipArchive;
         $this->assertTrue($zip->open($response->baseResponse->getFile()->getPathname()));
@@ -182,6 +184,20 @@ class AspectGradeFlowTest extends TestCase
         $zip->close();
         $this->expectException(AuthorizationException::class);
         $bulk->save($this->pembina, $this->asrama, $this->aspect, [$this->first->id => ['rating' => 'D', 'version' => $report->fresh()->version]]);
+    }
+
+    public function test_admin_can_find_and_print_saved_reports_without_approval_or_dorm_assignment(): void
+    {
+        $approved = SantriAssessment::create(['santri_id' => $this->first->id, 'assessment_period_id' => $this->period->id, 'asrama_id' => $this->asrama->id, 'user_id' => $this->pembina->id, 'student_name' => 'Ahmad', 'asrama_name' => $this->asrama->name, 'period_name' => $this->period->name, 'status' => 'approved']);
+        $draft = SantriAssessment::create(['santri_id' => $this->second->id, 'assessment_period_id' => $this->period->id, 'asrama_id' => $this->asrama->id, 'user_id' => $this->pembina->id, 'student_name' => 'Zaid', 'asrama_name' => $this->asrama->name, 'period_name' => $this->period->name, 'status' => 'draft']);
+        $this->actingAs($this->admin)->get(route('dashboard.admin'))->assertOk()->assertSee(route('santri.rapor'), false);
+        Livewire::actingAs($this->admin)->test(RaporAsrama::class)->set('asramaId', (string) $this->asrama->id)
+            ->assertSee(route('santri.print-asrama', [$this->asrama, $this->period]), false)
+            ->assertSee(route('assessments.print', $approved), false)->assertSee(route('assessments.print', $draft), false);
+        Livewire::actingAs($this->admin)->test(AssessmentMonitoring::class)->set('status', 'approved')->assertSee(route('assessments.print', $approved), false);
+        $this->get(route('assessments.print', $approved))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->get(route('assessments.print', $draft))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->get(route('santri.print-asrama', [$this->asrama, $this->period]))->assertOk()->assertHeader('Content-Type', 'application/pdf');
     }
 
     public function test_master_edits_do_not_rewrite_period_snapshot_and_year_deactivation_closes_input(): void

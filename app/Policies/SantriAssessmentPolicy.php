@@ -37,6 +37,6 @@ class SantriAssessmentPolicy
 
     public function print(User $user, SantriAssessment $assessment): bool
     {
-        return $this->view($user, $assessment) && $assessment->status === 'approved';
+        return $this->view($user, $assessment);
     }
 }
