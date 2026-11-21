@@ -231,7 +231,7 @@ Pada penyesuaian lokal ini, satu periode legacy aktif yang kosong sudah dihapus 
 
 Admin membuka **Asrama → Kelola santri** pada asrama tujuan. Halaman menampilkan anggota asrama beserta identitas ringkas dan jumlah anggota di daftar asrama.
 
-Form **Tambah Santri ke Asrama** tampil langsung di atas tabel. Cari nama/NISN, pilih satu santri aktif yang belum ditempatkan, periksa ringkasan pilihan, lalu klik **Tambah Santri**. Tombol **Batal pilih** mengosongkan pilihan. Santri yang sudah berada di asrama lain tidak dipindahkan otomatis. Pembuatan identitas santri baru dilakukan dari menu **Santri binaan**.
+Form **Tambah Santri ke Asrama** tampil langsung di atas tabel. Cari nama/NISN, centang satu atau beberapa santri aktif yang belum ditempatkan, periksa ringkasan nama/jumlah pilihan, lalu klik **Tambah Santri (jumlah)**. Pilihan bertahan saat mencari nama lain atau berpindah halaman kandidat. **Batal pilih** membatalkan satu nama, sedangkan **Batalkan semua** mengosongkan seluruh pilihan. Penyimpanan dilakukan dalam satu transaksi; jika salah satu pilihan sudah tidak memenuhi syarat, tidak ada santri dalam pilihan tersebut yang ditambahkan sampai masalah diperbaiki. Santri yang sudah berada di asrama lain tidak dipindahkan otomatis. Pembuatan identitas santri baru dilakukan dari menu **Santri binaan**.
 
 Daftar anggota dan hasil pencarian kandidat memakai pagination 10 baris secara independen. Kategori putra/putri, status asrama/santri, dan penempatan diperiksa ulang di server. Fitur hanya untuk admin aktif. Anggota baru otomatis muncul di Santri binaan pembina yang ditugaskan ke asrama tersebut.
 

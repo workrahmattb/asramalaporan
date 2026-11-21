@@ -29,7 +29,8 @@ class ManageAsramaStudents extends Component
 
     public string $candidateSearch = '';
 
-    public string $studentId = '';
+    /** @var list<int> */
+    public array $studentIds = [];
 
     public string $notice = '';
 
@@ -53,7 +54,6 @@ class ManageAsramaStudents extends Component
 
     public function updatedCandidateSearch(): void
     {
-        $this->studentId = '';
         $this->showDropdown = true;
         $this->resetPage('candidatePage');
     }
@@ -67,21 +67,25 @@ class ManageAsramaStudents extends Component
     public function selectStudent(int $id): void
     {
         $this->authorize('manage', Santri::class);
-        $asrama = Asrama::findOrFail($this->asramaId);
-        if (! $this->availableStudents($asrama)->whereKey($id)->exists()) {
-            $this->addError('studentId', 'Santri sudah ditempatkan, nonaktif, atau kategorinya tidak sesuai. Pilih santri lain.');
+        if (in_array($id, $this->studentIds, true)) {
+            $this->studentIds = array_values(array_diff($this->studentIds, [$id]));
+        } else {
+            $asrama = Asrama::findOrFail($this->asramaId);
+            if (! $this->availableStudents($asrama)->whereKey($id)->exists()) {
+                $this->addError('studentIds', 'Santri sudah ditempatkan, nonaktif, atau kategorinya tidak sesuai. Pilih santri lain.');
 
-            return;
+                return;
+            }
+            $this->studentIds[] = $id;
         }
-        $this->studentId = (string) $id;
-        $this->candidateSearch = '';
-        $this->showDropdown = false;
+        $this->showDropdown = true;
+        $this->notice = '';
         $this->resetValidation();
     }
 
     public function clearSelection(): void
     {
-        $this->reset('studentId', 'candidateSearch', 'showDropdown');
+        $this->reset('studentIds', 'candidateSearch', 'showDropdown');
         $this->resetPage('candidatePage');
         $this->resetValidation();
     }
@@ -89,11 +93,11 @@ class ManageAsramaStudents extends Component
     public function save(): void
     {
         $this->authorize('manage', Santri::class);
-        $this->validate(['studentId' => 'required|integer|exists:santris,id']);
-        app(AsramaStudentService::class)->assign(auth()->user(), $this->asramaId, (int) $this->studentId);
+        $this->validate(['studentIds' => 'required|array|min:1', 'studentIds.*' => 'required|integer|distinct']);
+        $count = app(AsramaStudentService::class)->assignMany(auth()->user(), $this->asramaId, $this->studentIds);
         $this->clearSelection();
         $this->resetPage();
-        $this->notice = 'Santri berhasil ditambahkan ke asrama.';
+        $this->notice = $count.' santri berhasil ditambahkan ke asrama.';
     }
 
     public function confirmRemove(int $id): void
@@ -130,7 +134,7 @@ class ManageAsramaStudents extends Component
     public function render(): View
     {
         $this->authorize('manage', Santri::class);
-        validator(['search' => $this->search, 'candidateSearch' => $this->candidateSearch], ['search' => 'string|max:255', 'candidateSearch' => 'string|max:255'])->validate();
+        validator(['search' => $this->search, 'candidateSearch' => $this->candidateSearch, 'studentIds' => $this->studentIds], ['studentIds' => 'array', 'studentIds.*' => 'integer|distinct', 'search' => 'string|max:255', 'candidateSearch' => 'string|max:255'])->validate();
         $asrama = Asrama::findOrFail($this->asramaId);
         $students = Santri::whereHas('currentPlacement', fn ($q) => $q->where('asrama_id', $asrama->id))
             ->when($this->search, fn ($q) => $q->where(fn ($q) => $q->where('name', 'like', '%'.$this->search.'%')->orWhere('nisn', 'like', '%'.$this->search.'%')))
@@ -140,7 +144,7 @@ class ManageAsramaStudents extends Component
             ->orderBy('name')->orderBy('id');
 
         return view('livewire.admin.manage-asrama-students', [
-            'selectedStudent' => $this->studentId !== '' ? Santri::find($this->studentId) : null,
+            'selectedStudents' => Santri::whereIn('id', $this->studentIds)->orderBy('name')->get(),
             'pendingRemoval' => $this->removalId ? Santri::find($this->removalId) : null,
             'asrama' => $asrama,
             'students' => $students,

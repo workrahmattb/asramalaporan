@@ -12,6 +12,7 @@ use App\Services\AsramaStudentService;
 use App\Services\SantriService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -39,14 +40,14 @@ class AsramaStudentTest extends TestCase
     {
         $student = $this->student('Ahmad');
         $component = Livewire::actingAs($this->admin)->test(ManageAsramaStudents::class, ['asrama' => $this->asrama])
-            ->call('openCandidates')->call('save')->assertHasErrors('studentId')->assertSet('showDropdown', true)
-            ->set('studentId', (string) $student->id)->call('save')->assertHasNoErrors()->assertSet('showDropdown', false);
+            ->call('openCandidates')->call('save')->assertHasErrors('studentIds')->assertSet('showDropdown', true)
+            ->set('studentIds', [$student->id])->call('save')->assertHasNoErrors()->assertSet('showDropdown', false);
         $this->assertSame($this->asrama->id, $student->fresh()->currentPlacement->asrama_id);
         $this->assertSame('putra', $student->fresh()->gender);
-        $component->call('openCandidates')->set('studentId', (string) $student->id)->call('save')->assertHasErrors('studentId');
+        $component->call('openCandidates')->set('studentIds', [$student->id])->call('save')->assertHasErrors('studentIds');
         $other = Asrama::create(['name' => 'B', 'code' => 'B', 'gender' => 'putra']);
         Livewire::actingAs($this->admin)->test(ManageAsramaStudents::class, ['asrama' => $other])->call('openCandidates')
-            ->set('studentId', (string) $student->id)->call('save')->assertHasErrors('studentId');
+            ->set('studentIds', [$student->id])->call('save')->assertHasErrors('studentIds');
         $this->assertSame(1, $student->placements()->count());
         $this->assertSame($this->asrama->id, $student->fresh()->currentPlacement->asrama_id);
     }
@@ -59,11 +60,11 @@ class AsramaStudentTest extends TestCase
         $component = Livewire::actingAs($this->admin)->test(ManageAsramaStudents::class, ['asrama' => $this->asrama])
             ->assertSee('Tambah Santri ke Asrama')->assertDontSee('Sumber data')->assertDontSee('Buat santri baru')
             ->call('openCandidates')->set('candidateSearch', '0012345678')->assertSee($name)
-            ->call('selectStudent', $student->id)->assertSet('showDropdown', false)->assertSet('studentId', (string) $student->id)
+            ->call('selectStudent', $student->id)->assertSet('showDropdown', true)->assertSet('studentIds', [$student->id])
             ->assertSee($name)->assertDontSee('<em>Santri</em>', false);
         $this->assertDatabaseCount('santri_placements', 0);
-        $component->call('clearSelection')->assertSet('studentId', '')->call('save')->assertHasErrors('studentId');
-        $component->call('openCandidates')->call('selectStudent', $student->id)->call('save')->assertHasNoErrors()->assertSet('studentId', '');
+        $component->call('clearSelection')->assertSet('studentIds', [])->call('save')->assertHasErrors('studentIds');
+        $component->call('openCandidates')->call('selectStudent', $student->id)->call('save')->assertHasNoErrors()->assertSet('studentIds', []);
         $this->assertDatabaseCount('santris', 1);
         $this->assertSame('0012345678', $student->fresh()->nisn);
         $this->assertSame($this->asrama->id, $student->fresh()->currentPlacement->asrama_id);
@@ -78,14 +79,63 @@ class AsramaStudentTest extends TestCase
         $inactive->update(['is_active' => false]);
         $component = Livewire::actingAs($this->admin)->test(ManageAsramaStudents::class, ['asrama' => $this->asrama])->call('openCandidates')
             ->assertViewHas('candidates', fn ($candidates) => $candidates->pluck('id')->all() === [$available->id]);
-        $component->call('selectStudent', $wrongGender->id)->assertHasErrors('studentId')->assertSet('studentId', '');
-        $component->set('studentId', (string) $wrongGender->id)->call('save')->assertHasErrors('asrama_id');
-        $component->set('studentId', (string) $inactive->id)->call('save')->assertHasErrors('studentId');
+        $component->call('selectStudent', $wrongGender->id)->assertHasErrors('studentIds')->assertSet('studentIds', []);
+        $component->set('studentIds', [$wrongGender->id])->call('save')->assertHasErrors('asrama_id');
+        $component->set('studentIds', [$inactive->id])->call('save')->assertHasErrors('studentIds');
         $this->assertNull($wrongGender->fresh()->currentPlacement);
         $this->assertSame($this->asrama->id, $placed->fresh()->currentPlacement->asrama_id);
         $this->asrama->update(['is_active' => false]);
-        $component->set('studentId', (string) $available->id)->call('save')->assertHasErrors('asrama_id');
+        $component->set('studentIds', [$available->id])->call('save')->assertHasErrors('asrama_id');
         $this->assertNull($available->fresh()->currentPlacement);
+    }
+
+    public function test_multiple_selections_persist_across_search_and_pages_then_save_together(): void
+    {
+        $first = $this->student('Calon 01');
+        foreach (range(2, 10) as $i) {
+            $this->student(sprintf('Calon %02d', $i));
+        }
+        $last = $this->student('Calon 11');
+        $component = Livewire::actingAs($this->admin)->test(ManageAsramaStudents::class, ['asrama' => $this->asrama])
+            ->call('openCandidates')->call('selectStudent', $first->id)->assertSet('showDropdown', true)
+            ->call('setPage', 2, 'candidatePage')->call('selectStudent', $last->id)
+            ->assertSet('studentIds', [$first->id, $last->id])->assertSee('2 santri dipilih')
+            ->set('candidateSearch', 'Calon 01')->assertSet('paginators.candidatePage', 1)->assertSet('studentIds', [$first->id, $last->id])
+            ->call('selectStudent', $first->id)->assertSet('studentIds', [$last->id])->call('selectStudent', $first->id);
+        $this->assertDatabaseCount('santri_placements', 0);
+        $component->call('save')->assertHasNoErrors()->assertSet('studentIds', [])->assertSee('2 santri berhasil ditambahkan');
+        $this->assertSame($this->asrama->id, $first->fresh()->currentPlacement->asrama_id);
+        $this->assertSame($this->asrama->id, $last->fresh()->currentPlacement->asrama_id);
+        $this->assertDatabaseCount('santri_placements', 2);
+        $this->assertDatabaseCount('santris', 11);
+    }
+
+    public function test_bulk_save_is_atomic_when_a_selection_becomes_unavailable(): void
+    {
+        $first = $this->student('Ahmad');
+        $second = $this->student('Zaid');
+        $component = Livewire::actingAs($this->admin)->test(ManageAsramaStudents::class, ['asrama' => $this->asrama])
+            ->call('selectStudent', $first->id)->call('selectStudent', $second->id);
+        $other = Asrama::create(['name' => 'Asrama B', 'code' => 'B', 'gender' => 'putra']);
+        app(AsramaStudentService::class)->assign($this->admin, $other->id, $second->id);
+        $component->call('save')->assertHasErrors('studentIds')->assertSet('studentIds', [$first->id, $second->id]);
+        $this->assertNull($first->fresh()->currentPlacement);
+        $this->assertSame($other->id, $second->fresh()->currentPlacement->asrama_id);
+        $component->call('selectStudent', $second->id)->call('save')->assertHasNoErrors();
+        $this->assertSame($this->asrama->id, $first->fresh()->currentPlacement->asrama_id);
+    }
+
+    public function test_bulk_save_rejects_duplicate_missing_and_mixed_invalid_ids_without_partial_assignment(): void
+    {
+        $student = $this->student('Ahmad');
+        $wrong = $this->student('Putri', null, 'putri');
+        $component = Livewire::actingAs($this->admin)->test(ManageAsramaStudents::class, ['asrama' => $this->asrama]);
+        $component->set('studentIds', [$student->id, $wrong->id])->call('save')->assertHasErrors('asrama_id');
+        $this->assertDatabaseCount('santri_placements', 0);
+        $component->set('studentIds', [$student->id, 999999])->call('save')->assertHasErrors('studentIds');
+        $this->assertDatabaseCount('santri_placements', 0);
+        $this->expectException(ValidationException::class);
+        app(AsramaStudentService::class)->assignMany($this->admin, $this->asrama->id, [$student->id, $student->id]);
     }
 
     public function test_removal_closes_placement_but_preserves_identity_notes_and_report_then_allows_reenrollment(): void
@@ -117,8 +167,8 @@ class AsramaStudentTest extends TestCase
             ->assertSee('Anggota 01')->assertDontSee('Anggota 11')->call('setPage', 2)->assertSee('Anggota 11')->assertDontSee('Anggota 01')
             ->call('openCandidates')->assertSee('Calon 01')->assertDontSee('Calon 11')
             ->call('setPage', 2, 'candidatePage')->assertSee('Calon 11')->assertSee('Anggota 11')->assertDontSee('Calon 01')
-            ->call('selectStudent', Santri::where('name', 'Calon 11')->value('id'))->assertSee('Santri dipilih')
-            ->set('candidateSearch', 'Calon 01')->assertSet('studentId', '')->assertSee('Calon 01')->assertDontSee('Calon 11');
+            ->call('selectStudent', Santri::where('name', 'Calon 11')->value('id'))->assertSee('1 santri dipilih')
+            ->set('candidateSearch', 'Calon 01')->assertSet('studentIds', [Santri::where('name', 'Calon 11')->value('id')])->assertSee('Calon 01')->assertSee('Calon 11');
         $component->call('clearSelection')->set('search', 'Anggota 01')->assertSee('Anggota 01')->assertDontSee('Anggota 11');
     }
 

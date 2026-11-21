@@ -8,22 +8,25 @@
         <h2>Tambah Santri ke Asrama</h2>
         <form wire:submit="save" class="space-y-4">
             <div class="asrama-student-picker" @click.outside="$wire.set('showDropdown', false)" @keydown.escape.window="$wire.set('showDropdown', false)">
-                @if($selectedStudent)
-                    <p class="caption">Santri dipilih</p><div class="asrama-selected-student"><div><strong>{{ $selectedStudent->name }}</strong><small class="block muted">NISN {{ $selectedStudent->nisn ?: 'belum diisi' }}</small></div><button type="button" class="button-secondary" wire:click="clearSelection" aria-label="Batal memilih santri">Batal pilih</button></div>
-                @else
-                    <label for="asrama-student-search">Pilih santri<input id="asrama-student-search" type="search" wire:model.live.debounce.300ms="candidateSearch" wire:focus="openCandidates" wire:click="openCandidates" placeholder="Klik untuk melihat santri atau cari nama/NISN…" autocomplete="off" aria-expanded="{{ $showDropdown ? 'true' : 'false' }}" aria-controls="asrama-student-options"></label>
+                @if(count($studentIds))
+                    <div class="panel-heading"><p class="caption" role="status">{{ count($studentIds) }} santri dipilih</p><button type="button" class="button-quiet" wire:click="clearSelection">Batalkan semua</button></div>
+                    <div class="space-y-2 max-h-64 overflow-y-auto mb-4" aria-label="Santri dipilih">@foreach($selectedStudents as $selectedStudent)
+                    <div class="asrama-selected-student" wire:key="selected-{{ $selectedStudent->id }}"><div><strong>{{ $selectedStudent->name }}</strong><small class="block muted">NISN {{ $selectedStudent->nisn ?: 'belum diisi' }}</small></div><button type="button" class="button-secondary" wire:click="selectStudent({{ $selectedStudent->id }})" aria-label="Batal memilih {{ $selectedStudent->name }}">Batal pilih</button></div>
+                    @endforeach</div>
                 @endif
+                <label for="asrama-student-search">Pilih santri<input id="asrama-student-search" type="search" wire:model.live.debounce.300ms="candidateSearch" wire:focus="openCandidates" wire:click="openCandidates" placeholder="Cari nama/NISN, lalu centang satu atau beberapa santri…" autocomplete="off" aria-expanded="{{ $showDropdown ? 'true' : 'false' }}" aria-controls="asrama-student-options"></label>
+                <p class="caption mt-2">Pilihan tetap tersimpan saat mencari nama lain atau berpindah halaman.</p>
                 @if($showDropdown)
                     <div id="asrama-student-options" class="asrama-student-options" aria-label="Santri belum ditempatkan">
                         <label class="sr-only" for="asrama-student-options-search">Cari santri belum ditempatkan</label><input id="asrama-student-options-search" type="search" wire:model.live.debounce.300ms="candidateSearch" placeholder="Cari nama atau NISN" autocomplete="off">
                         @forelse($candidates ?? [] as $candidate)
-                        <button type="button" class="asrama-student-option" wire:click="selectStudent({{ $candidate->id }})" wire:key="candidate-{{ $candidate->id }}"><span><strong>{{ $candidate->name }}</strong><small class="block muted">NISN {{ $candidate->nisn ?: 'belum diisi' }}</small></span><x-simus-icon name="plus"/></button>
+                        <label class="asrama-student-option" wire:key="candidate-{{ $candidate->id }}"><span><strong>{{ $candidate->name }}</strong><small class="block muted">NISN {{ $candidate->nisn ?: 'belum diisi' }}</small></span><input type="checkbox" wire:click="selectStudent({{ $candidate->id }})" @checked(in_array($candidate->id, $studentIds, true)) aria-label="Pilih {{ $candidate->name }}" wire:loading.attr="disabled" wire:target="selectStudent"></label>
                         @empty<p class="caption p-4">Tidak ada santri tersedia. Santri harus aktif, belum ditempatkan, dan sesuai kategori asrama.</p>@endforelse
                         @if($candidates && $candidates->hasPages())<div class="mt-3">{{ $candidates->links(data: ['scrollTo' => false]) }}</div>@endif
                     </div>
                 @endif
             </div>
-            <button type="submit" wire:loading.attr="disabled" @disabled(!$studentId || !$asrama->is_active)><x-simus-icon name="plus"/>Tambah Santri</button>
+            <button type="submit" wire:loading.attr="disabled" @disabled(!count($studentIds) || !$asrama->is_active)><x-simus-icon name="plus"/><span wire:loading.remove wire:target="save">Tambah Santri{{ count($studentIds) ? ' ('.count($studentIds).')' : '' }}</span><span wire:loading wire:target="save">Menambahkan…</span></button>
         </form>
         <p class="caption">Hanya santri yang belum ditempatkan yang dapat dipilih. Data santri baru dikelola dari menu <a wire:navigate class="text-link" href="{{ route('santri.index') }}">Santri binaan</a>.</p>
     </section>
