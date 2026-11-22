@@ -137,18 +137,22 @@ class AspectGradeFlowTest extends TestCase
         app(AspectGradeService::class)->save($this->pembina, $this->asrama, $this->aspect, [$student->id => ['rating' => 'A', 'version' => null]]);
     }
 
-    public function test_component_paginates_saves_rows_and_rejects_forged_student_keys(): void
+    public function test_component_shows_and_saves_all_students_without_pagination_and_rejects_forged_keys(): void
     {
         foreach (range(1, 10) as $i) {
             $this->student(sprintf('Santri %02d', $i));
         }
         $component = Livewire::actingAs($this->pembina)->test(AspectGradeForm::class, ['asrama' => $this->asrama, 'aspect' => $this->aspect])
-            ->assertSee('Ahmad')->assertDontSee('Zaid')
-            ->set('ratings.'.$this->first->id, 'A')->call('save')->assertHasNoErrors()->assertDispatched('grades-saved');
+            ->assertSee('Ahmad')->assertSee('Santri 10')->assertSee('Zaid')->assertDontSee('Halaman input nilai')
+            ->assertViewHas('students', fn ($students) => $students->count() === 12)
+            ->set('ratings.'.$this->first->id, 'A')->set('ratings.'.$this->second->id, 'X')->call('save')->assertHasErrors();
+        $this->assertDatabaseCount('santri_assessments', 0);
+        $component->set('ratings.'.$this->second->id, 'B')->call('save')->assertHasNoErrors()->assertDispatched('grades-saved');
         $this->assertSame('A', $this->report($this->first)->items->first()->rating);
-        $component->call('goToPage', 2)->assertSee('Zaid')->assertDontSee('Ahmad')
-            ->set('ratings.'.$this->first->id, 'B')->call('save')->assertHasErrors('ratings');
+        $this->assertSame('B', $this->report($this->second)->items->first()->rating);
+        $component->set('ratings.999999', 'C')->call('save')->assertHasErrors('ratings');
         $this->assertSame('A', $this->report($this->first)->items->first()->rating);
+        $this->assertSame('B', $this->report($this->second)->items->first()->rating);
     }
 
     public function test_inactive_period_prevents_saving_an_already_open_form(): void

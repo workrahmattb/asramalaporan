@@ -188,7 +188,7 @@ Urutan setup admin pada **Tahun ajaran & semester**:
 2. Tambahkan/edit master aspek dan indikator pada menu Aspek penilaian. Master awal otomatis diambil dari nama aspek periode lama saat migrasi; admin dapat melengkapi indikator.
 3. Aktifkan tahun dan salah satu semester langsung di daftar Tahun Ajaran. Jika perlu, ubah rubrik lewat **Aspek & skala nilai**. Tahun ajaran hanya memiliki satu semester untuk setiap jenis; pengaktifan semester menonaktifkan semester lain.
 
-Pembina membuka **Santri → Rapor Asrama**, memilih asrama serta aspek, lalu memilih **Isi nilai seluruh santri**. Tabel berisi maksimal 10 santri per halaman. Simpan nilai sebelum berpindah halaman/aspek. Nilai kosong menghapus nilai aspek tersebut pada santri yang sudah memiliki rapor; santri kosong yang belum pernah dinilai tidak dibuatkan draft otomatis. Nilai aspek lain dan catatan tetap tersimpan.
+Pembina membuka **Santri → Rapor Asrama**, memilih asrama serta aspek, lalu memilih **Isi nilai seluruh santri**. Khusus tabel input nilai per aspek, seluruh santri aktif pada asrama tampil sekaligus tanpa pagination. Tombol Simpan nilai menyimpan seluruh baris yang dapat diedit. Simpan nilai sebelum berpindah aspek. Nilai kosong menghapus nilai aspek tersebut pada santri yang sudah memiliki rapor; santri kosong yang belum pernah dinilai tidak dibuatkan draft otomatis. Nilai aspek lain dan catatan tetap tersimpan.
 
 Semester baru menggunakan A/B/C/D secara default. Pilihan khusus masih dapat ditentukan admin sebelum penilaian dimulai. Periode lama mempertahankan skalanya; nilai lama tidak dikonversi menjadi huruf. Master dan indikator disalin ke semester, lalu ke item rapor saat draft dibuat. Perubahan master tidak mengubah semester/rapor lama.
 
@@ -241,7 +241,7 @@ Tambahan fitur ini tidak mengubah schema database, tidak membutuhkan seeder/migr
 
 ## Pagination daftar data
 
-Seluruh daftar utama memakai pagination 10 data per halaman melalui Livewire: Pembina & Penempatan, Kegiatan harian, Asrama/anggota asrama, Santri, Tahun Ajaran, master aspek, riwayat/monitoring laporan, pemeriksaan/rapor, serta Rekap bulanan admin dan pembina. Pilihan dropdown, checklist isian, rincian satu rapor, dan dokumen cetak tetap ditampilkan lengkap sesuai fungsinya.
+Seluruh daftar utama memakai pagination 10 data per halaman melalui Livewire: Pembina & Penempatan, Kegiatan harian, Asrama/anggota asrama, Santri, Tahun Ajaran, master aspek, riwayat/monitoring laporan, pemeriksaan/rapor, serta Rekap bulanan admin dan pembina. Khusus tabel input nilai per aspek Rapor Asrama, seluruh nama ditampilkan sekaligus tanpa pagination sesuai permintaan. Pilihan dropdown, checklist isian, rincian satu rapor, dan dokumen cetak tetap ditampilkan lengkap sesuai fungsinya.
 
 Perubahan filter mengembalikan daftar ke halaman pertama. Membuka/menutup popup edit pembina atau kegiatan mempertahankan halaman yang sedang dibuka. Pagination rekap hanya membagi tampilan; perhitungan dan ekspor Excel tetap menggunakan seluruh data sesuai filter. Tidak ada perubahan schema, migration, atau seeder untuk tambahan pagination ini.
 

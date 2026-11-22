@@ -27,7 +27,7 @@ class AspectGradeService
     public function save(User $user, Asrama $asrama, AssessmentAspect $aspect, array $rows): void
     {
         $this->authorizeContext($user, $asrama, $aspect);
-        validator(['rows' => $rows], ['rows' => 'required|array|max:10', 'rows.*.rating' => 'nullable|string|max:100', 'rows.*.version' => 'nullable|integer'])->validate();
+        validator(['rows' => $rows], ['rows' => 'required|array', 'rows.*.rating' => 'nullable|string|max:100', 'rows.*.version' => 'nullable|integer'])->validate();
         DB::transaction(function () use ($user, $asrama, $aspect, $rows) {
             ksort($rows);
             foreach ($rows as $id => $row) {

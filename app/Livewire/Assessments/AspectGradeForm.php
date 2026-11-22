@@ -19,9 +19,6 @@ class AspectGradeForm extends Component
     #[Locked]
     public int $aspectId;
 
-    #[Locked]
-    public int $page = 1;
-
     /** @var array<int,string> */
     public array $ratings = [];
 
@@ -53,7 +50,7 @@ class AspectGradeForm extends Component
         app(AspectGradeService::class)->authorizeContext(auth()->user(), Asrama::findOrFail($this->asramaId), $aspect);
         $this->ratings = [];
         $this->versions = [];
-        foreach ($this->students()->paginate(10, pageName: 'gradePage', page: $this->page) as $student) {
+        foreach ($this->students()->get() as $student) {
             $report = $student->assessments->first();
             if (! $report || auth()->user()->can('update', $report)) {
                 $this->ratings[$student->id] = $report?->items->firstWhere('assessment_aspect_id', $aspect->id)->rating ?? '';
@@ -62,13 +59,6 @@ class AspectGradeForm extends Component
         }
         $this->resetValidation();
         $this->dispatch('grades-loaded');
-    }
-
-    public function goToPage(int $page): void
-    {
-        abort_unless($page >= 1 && $page <= max(1, (int) ceil($this->students()->count() / 10)), 422);
-        $this->page = $page;
-        $this->loadGrades();
     }
 
     public function save(): void
@@ -97,6 +87,6 @@ class AspectGradeForm extends Component
         $aspect = AssessmentAspect::with('period')->findOrFail($this->aspectId);
         app(AspectGradeService::class)->authorizeContext(auth()->user(), $asrama, $aspect);
 
-        return view('livewire.assessments.aspect-grade-form', ['asrama' => $asrama, 'aspect' => $aspect, 'students' => $this->students()->paginate(10, pageName: 'gradePage', page: $this->page)])->layout('layouts.simus');
+        return view('livewire.assessments.aspect-grade-form', ['asrama' => $asrama, 'aspect' => $aspect, 'students' => $this->students()->get()])->layout('layouts.simus');
     }
 }
