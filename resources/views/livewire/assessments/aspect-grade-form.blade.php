@@ -4,16 +4,16 @@
     @if($errors->any())<div class="notice notice-error" role="alert"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
     <section class="panel"><h2>{{ $aspect->title }}</h2><p class="student-prose mt-3">{{ $aspect->indicator ?: 'Indikator belum diisi pada periode ini.' }}</p><p class="caption mt-3">Isi nilai seluruh santri aktif di asrama ini. Mengosongkan nilai akan menghapus nilai aspek ini setelah disimpan. Aspek lain tetap tersimpan.</p></section>
     <form wire:submit="save" @submit="saved=false" class="space-y-4">
-    <div class="panel table-wrap"><table><caption class="sr-only">Nilai {{ $aspect->title }} santri {{ $asrama->name }}</caption><thead><tr><th>Santri</th><th>Nilai</th></tr></thead><tbody>
+    <div class="panel table-wrap"><table><caption class="sr-only">Nilai {{ $aspect->title }} santri {{ $asrama->name }}</caption><thead><tr><th scope="col">No.</th><th scope="col">Santri</th><th scope="col">Nilai</th></tr></thead><tbody>
     @forelse($students as $student)
         @php($report = $student->assessments->first())
         @php($item = $report?->items->firstWhere('assessment_aspect_id', $aspect->id))
-        <tr wire:key="grade-{{ $student->id }}"><td>{{ $student->name }}<small class="block muted">{{ $student->nisn ?: 'NISN belum diisi' }}</small></td><td>
+        <tr wire:key="grade-{{ $student->id }}"><td>{{ $loop->iteration }}</td><td>{{ $student->name }}<small class="block muted">{{ $student->nisn ?: 'NISN belum diisi' }}</small></td><td>
         @if(array_key_exists($student->id, $versions))
         <select wire:model="ratings.{{ $student->id }}" aria-label="Nilai {{ $student->name }}"><option value="">Belum dinilai</option>@foreach($item?->rating_labels ?? $aspect->period->rating_labels as $label)<option value="{{ $label }}">{{ $label }}</option>@endforeach</select>
         @else<span class="status-badge">{{ $report?->status_label ?? 'Tidak dapat diubah' }}</span><p class="caption">{{ $item?->rating ?: '—' }}</p>@endif
         </td></tr>
-    @empty<tr><td colspan="2" class="table-empty">Belum ada santri aktif di asrama ini.</td></tr>@endforelse
+    @empty<tr><td colspan="3" class="table-empty">Belum ada santri aktif di asrama ini.</td></tr>@endforelse
     </tbody></table></div>
     <div x-show="saved" x-cloak class="notice notice-success" role="status" aria-live="polite" aria-atomic="true">
         <strong class="block">Nilai berhasil disimpan</strong>
