@@ -22,6 +22,12 @@ class SantriAssessment extends Model
         return $this->belongsTo(Santri::class);
     }
 
+    /** @return BelongsTo<Asrama,$this> */
+    public function asrama(): BelongsTo
+    {
+        return $this->belongsTo(Asrama::class);
+    }
+
     /** @return BelongsTo<AssessmentPeriod,$this> */
     public function period(): BelongsTo
     {

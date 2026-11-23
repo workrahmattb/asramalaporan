@@ -5,6 +5,7 @@ body{margin:0;color:#000;font-family:DejaVu Sans,Arial,sans-serif;font-size:8.5p
 h1{margin:0;font-size:11pt;text-decoration:underline;line-height:1.3}
 .report-heading{text-align:center;margin-bottom:4mm}.report-heading p{margin:0;font-size:9pt;font-style:italic;font-weight:bold;color:#555}
 table{width:100%;border-collapse:collapse;table-layout:fixed}td,th{vertical-align:top;overflow-wrap:break-word}
+.institution-heading{position:relative;text-align:center;min-height:14mm;padding:0 17mm 3mm;margin-bottom:3mm;border-bottom:1pt solid #000}.institution-name{font-size:12pt;font-weight:bold}.institution-address{font-size:9pt;margin-top:2pt}.institution-heading .institution-logo{position:absolute;left:0;top:0;width:14mm;text-align:center}.institution-logo img{max-width:14mm;max-height:14mm}
 .identity{margin-bottom:4mm}.identity td{padding:1pt 0}.identity td:first-child{width:36%}.identity .colon{width:3%}
 h2{margin:0 0 2pt;font-size:9pt}em{font-style:italic}
 .grades th,.grades td{border:.6pt solid #000;padding:2.5pt 4pt}.grades th{vertical-align:middle;text-align:center}.grades .number{width:6%}.grades .aspect{width:27%}.grades .rating{width:10%}.center{text-align:center;vertical-align:middle!important}

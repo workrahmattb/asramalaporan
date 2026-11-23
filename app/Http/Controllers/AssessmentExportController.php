@@ -45,7 +45,7 @@ class AssessmentExportController extends Controller
     public function printAsrama(Request $request, Asrama $asrama, AssessmentPeriod $period, AssessmentPdfService $pdf): Response
     {
         $this->authorizeAsrama($request, $asrama);
-        $reports = SantriAssessment::visibleTo($request->user())->where('asrama_id', $asrama->id)->where('assessment_period_id', $period->id)->with('items', 'user', 'reviewer')->orderBy('student_name')->get();
+        $reports = SantriAssessment::visibleTo($request->user())->where('asrama_id', $asrama->id)->where('assessment_period_id', $period->id)->with('items', 'user', 'reviewer', 'asrama')->orderBy('student_name')->get();
 
         return $pdf->render('assessments.print-asrama', compact('reports', 'asrama', 'period'), 'rapor-asrama-'.$asrama->id.'-periode-'.$period->id.'.pdf');
     }

@@ -1,3 +1,16 @@
+@php
+    $dormGender = $report->relationLoaded('asrama') ? $report->asrama?->gender : null;
+    $institution = config('rapor.institutions.'.$dormGender, []);
+    $institutionName = $institution['name'] ?? "Pondok Pesantren Syafa'aturrasul";
+    $institutionAddress = $institution['address'] ?? 'Kuantan Singingi, Riau';
+    $logo = $institution['logo'] ?? null;
+    $logoData = $logo && is_file(public_path($logo)) ? 'data:image/png;base64,'.base64_encode(file_get_contents(public_path($logo))) : null;
+@endphp
+<div class="institution-heading">
+    @if($logoData)<div class="institution-logo"><img src="{{ $logoData }}" alt="Logo {{ $institutionName }}"></div>@endif
+    <div class="institution-name">{{ $institutionName }}</div>
+    <div class="institution-address">{{ $institutionAddress }}</div>
+</div>
 <header class="report-heading">
     <h1>LAPORAN PENILAIAN SIKAP KEPRIBADIAN DAN SOSIAL SANTRI</h1>
     <p>ASSESSMENT REPORT OF STUDENTS’ RELIGIOUS AND SOCIAL BEHAVIOR</p>

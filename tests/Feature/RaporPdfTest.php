@@ -46,6 +46,30 @@ class RaporPdfTest extends TestCase
         $this->actingAs($admin)->get(route('santri.print-asrama', [$asrama, $period]))->assertOk()->assertHeader('Content-Type', 'application/pdf');
     }
 
+    public function test_print_heading_and_logo_match_report_dorm_gender(): void
+    {
+        $report = new SantriAssessment(['student_name' => 'Santri', 'asrama_name' => 'Asrama', 'period_name' => 'Periode']);
+        $report->setRelation('user', new User(['name' => 'Pembina']));
+        $report->setRelation('items', collect());
+        foreach (['putra' => "Pondok Pesantren Syafa'aturrasul Putra", 'putri' => "Pondok Pesantren Syafa'aturrasul Putri", '' => "Pondok Pesantren Syafa'aturrasul"] as $gender => $name) {
+            $report->setRelation('asrama', new Asrama(['gender' => $gender]));
+            $html = view('assessments.print', compact('report'))->render();
+            $this->assertStringContainsString(e($name), $html);
+            $this->assertStringContainsString('Kuantan Singingi, Riau', $html);
+            if ($gender !== '') {
+                $this->assertStringContainsString('data:image/png;base64,'.base64_encode(file_get_contents(public_path('logo-pondok-'.$gender.'.png'))), $html);
+                $this->assertStringNotContainsString('data:image/png;base64,'.base64_encode(file_get_contents(public_path('logo-pondok-'.($gender === 'putra' ? 'putri' : 'putra').'.png'))), $html);
+            } else {
+                $this->assertStringNotContainsString('<img ', $html);
+            }
+            if ($gender === 'putra') {
+                $this->assertStringNotContainsString(e("Syafa'aturrasul Putri"), $html);
+            } elseif ($gender === 'putri') {
+                $this->assertStringNotContainsString(e("Syafa'aturrasul Putra"), $html);
+            }
+        }
+    }
+
     public function test_template_escapes_names_and_uses_saved_report_values_and_configured_signatories(): void
     {
         $report = new SantriAssessment(['student_name' => '<script>santri</script>', 'student_nisn' => '0012345678', 'asrama_name' => 'Asrama snapshot', 'period_name' => 'Semester snapshot', 'development' => 'Catatan tersimpan', 'next_focus' => 'Fokus tersimpan', 'reviewed_at' => '2026-06-19']);

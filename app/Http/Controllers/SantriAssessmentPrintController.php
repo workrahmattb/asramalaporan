@@ -13,6 +13,6 @@ class SantriAssessmentPrintController extends Controller
     {
         Gate::authorize('print', $assessment);
 
-        return $pdf->render('assessments.print', ['report' => $assessment->load('items', 'user', 'reviewer')], 'rapor-santri-'.$assessment->id.'.pdf');
+        return $pdf->render('assessments.print', ['report' => $assessment->load('items', 'user', 'reviewer', 'asrama')], 'rapor-santri-'.$assessment->id.'.pdf');
     }
 }
