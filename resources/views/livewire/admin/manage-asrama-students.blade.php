@@ -31,7 +31,7 @@
         <p class="caption">Hanya santri yang belum ditempatkan yang dapat dipilih. Data santri baru dikelola dari menu <a wire:navigate class="text-link" href="{{ route('santri.index') }}">Santri binaan</a>.</p>
     </section>
     <section class="panel"><div class="panel-heading"><h2>Asrama {{ $asrama->name }}</h2><span class="caption">{{ $students->total() }} santri sesuai pencarian</span></div><label>Cari santri di asrama<input type="search" wire:model.live.debounce.300ms="search" placeholder="Nama atau NISN"></label>
-    <div class="table-wrap mt-4"><table><caption class="sr-only">Daftar santri {{ $asrama->name }}</caption><thead><tr><th>No</th><th>NISN</th><th>Nama santri</th><th>Kategori</th><th>Aksi</th></tr></thead><tbody>
+    <div class="table-wrap mt-4"><table><caption class="sr-only">Daftar santri {{ $asrama->name }}</caption><thead><tr><th scope="col">No.</th><th>NISN</th><th>Nama santri</th><th>Kategori</th><th>Aksi</th></tr></thead><tbody>
     @forelse($students as $student)<tr wire:key="member-{{ $student->id }}"><td>{{ $students->firstItem() + $loop->index }}</td><td>{{ $student->nisn ?: '—' }}</td><td>{{ $student->name }}</td><td>{{ $student->gender ? ucfirst($student->gender) : '—' }}</td><td><div class="flex flex-wrap gap-2"><a wire:navigate class="text-link" href="{{ route('santri.show', $student) }}">Lihat</a><button class="button-secondary" wire:click="confirmRemove({{ $student->id }})">Keluarkan</button></div></td></tr>
     @empty<tr><td colspan="5" class="table-empty">Belum ada santri sesuai pencarian. Tambahkan santri menggunakan form di atas.</td></tr>@endforelse
     </tbody></table></div>
