@@ -21,6 +21,14 @@ class MonthlyRecap extends Component
 
     public string $userId = '';
 
+    public string $pembinaRole = '';
+
+    public function updatedPembinaRole(): void
+    {
+        $this->userId = '';
+        $this->resetPage();
+    }
+
     public function mount(): void
     {
         $this->month = now()->format('Y-m');
@@ -28,19 +36,19 @@ class MonthlyRecap extends Component
 
     public function updated(string $field): void
     {
-        if (in_array($field, ['month', 'asramaId', 'userId'], true)) {
+        if (in_array($field, ['month', 'asramaId', 'userId', 'pembinaRole'], true)) {
             $this->resetPage();
         }
     }
 
     public function render(): View
     {
-        $this->validate(['month' => 'required|date_format:Y-m', 'asramaId' => 'nullable|integer', 'userId' => 'nullable|integer']);
+        $this->validate(['pembinaRole' => 'in:,musyrif,musyrifah', 'month' => 'required|date_format:Y-m', 'asramaId' => 'nullable|integer', 'userId' => 'nullable|integer']);
         $u = auth()->user();
         $asramas = $u->isAdmin() ? Asrama::all() : $u->assignedAsramas()->get();
-        $users = User::whereIn('role', ['musyrif', 'musyrifah'])->when($u->isPembina(), fn ($q) => $q->whereKey($u->id))->when($u->role === 'koordinator', fn ($q) => $q->whereHas('asramas', fn ($q) => $q->whereIn('asramas.id', $asramas->pluck('id'))))->get();
+        $users = User::whereIn('role', ['musyrif', 'musyrifah'])->when($this->pembinaRole, fn ($q) => $q->where('role', $this->pembinaRole))->when($u->isPembina(), fn ($q) => $q->whereKey($u->id))->when($u->role === 'koordinator', fn ($q) => $q->whereHas('asramas', fn ($q) => $q->whereIn('asramas.id', $asramas->pluck('id'))))->get();
 
-        $data = app(ReportStatisticsService::class)->monthly($u, $this->month, $this->asramaId ? (int) $this->asramaId : null, $this->userId ? (int) $this->userId : null);
+        $data = app(ReportStatisticsService::class)->monthly($u, $this->month, $this->asramaId ? (int) $this->asramaId : null, $this->userId ? (int) $this->userId : null, $this->pembinaRole ?: null);
         usort($data, static fn (array $a, array $b): int => [$a['name'], $a['asrama'], $a['user_id'], $a['asrama_id']] <=> [$b['name'], $b['asrama'], $b['user_id'], $b['asrama_id']]);
         $page = min($this->getPage(), max(1, (int) ceil(count($data) / 10)));
         if ($page !== $this->getPage()) {

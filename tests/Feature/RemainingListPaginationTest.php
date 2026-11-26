@@ -55,6 +55,37 @@ class RemainingListPaginationTest extends TestCase
         $component->call('setPage', 2)->set('gender', 'putri')->assertSet('paginators.page', 1)->assertViewHas('users', fn ($users) => $users->total() === 0);
     }
 
+    public function test_monthly_category_filters_rows_names_and_excel_without_expanding_coordinator_scope(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $putra = User::factory()->create(['name' => 'Pembina Putra Uji', 'role' => 'musyrif']);
+        $putri = User::factory()->create(['name' => 'Pembina Putri Uji', 'role' => 'musyrifah']);
+        $a = Asrama::create(['name' => 'Asrama A', 'code' => 'A']);
+        $b = Asrama::create(['name' => 'Asrama B', 'code' => 'B']);
+        foreach ([[$putra, $a], [$putri, $b]] as [$user, $dorm]) {
+            $user->asramas()->attach($dorm, ['assignment_role' => $user->role, 'start_date' => today()->toDateString()]);
+        }
+        $component = Livewire::actingAs($admin)->test(MonthlyRecap::class)
+            ->assertSee('Kategori pembina')->assertViewHas('rows', fn ($rows) => $rows->total() === 2)
+            ->set('userId', (string) $putri->id)->call('setPage', 2)->set('pembinaRole', 'musyrif')
+            ->assertSet('userId', '')->assertSet('paginators.page', 1)
+            ->assertViewHas('rows', fn ($rows) => $rows->pluck('user_id')->all() === [$putra->id])
+            ->assertViewHas('users', fn ($users) => $users->modelKeys() === [$putra->id])
+            ->set('pembinaRole', 'musyrifah')->assertViewHas('rows', fn ($rows) => $rows->pluck('user_id')->all() === [$putri->id])
+            ->set('pembinaRole', '')->assertViewHas('rows', fn ($rows) => $rows->total() === 2);
+        $response = $this->actingAs($admin)->get('/reports/export?month='.today()->format('Y-m').'&pembina_role=musyrifah')->assertOk();
+        $zip = new ZipArchive;
+        $this->assertTrue($zip->open($response->baseResponse->getFile()->getPathname()));
+        $xml = $zip->getFromName('xl/worksheets/sheet1.xml');
+        $this->assertStringContainsString('Pembina Putri Uji', $xml);
+        $this->assertStringNotContainsString('Pembina Putra Uji', $xml);
+        $zip->close();
+        $this->get('/reports/export?month='.today()->format('Y-m').'&pembina_role=invalid')->assertSessionHasErrors('pembina_role');
+        $coordinator = User::factory()->create(['role' => 'koordinator']);
+        $coordinator->asramas()->attach($a, ['assignment_role' => 'koordinator', 'start_date' => today()->toDateString()]);
+        Livewire::actingAs($coordinator)->test(MonthlyRecap::class)->set('pembinaRole', 'musyrifah')->assertViewHas('rows', fn ($rows) => $rows->total() === 0);
+    }
+
     public function test_daily_tasks_paginate_and_editing_a_task_keeps_current_page(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

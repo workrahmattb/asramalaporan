@@ -11,9 +11,9 @@ class ReportExportController extends Controller
     public function __invoke(Request $request, ReportStatisticsService $stats): BinaryFileResponse
     {
         abort_unless(in_array($request->user()->role, ['super_admin', 'admin', 'koordinator']), 403);
-        $data = $request->validate(['month' => 'required|date_format:Y-m', 'asrama_id' => 'nullable|integer', 'user_id' => 'nullable|integer']);
-        $rows = $stats->monthly($request->user(), $data['month'], empty($data['asrama_id']) ? null : (int) $data['asrama_id'], empty($data['user_id']) ? null : (int) $data['user_id']);
-        $values = [['Musyrifah', 'Asrama', 'Hari penempatan', 'Laporan terkirim', 'Rata-rata pelaksanaan (%)', 'Hari belum melapor']];
+        $data = $request->validate(['pembina_role' => 'nullable|in:musyrif,musyrifah', 'month' => 'required|date_format:Y-m', 'asrama_id' => 'nullable|integer', 'user_id' => 'nullable|integer']);
+        $rows = $stats->monthly($request->user(), $data['month'], empty($data['asrama_id']) ? null : (int) $data['asrama_id'], empty($data['user_id']) ? null : (int) $data['user_id'], $data['pembina_role'] ?? null);
+        $values = [['Pembina', 'Asrama', 'Hari penempatan', 'Laporan terkirim', 'Rata-rata pelaksanaan (%)', 'Hari belum melapor']];
         foreach ($rows as $row) {
             $values[] = [$row['name'], $row['asrama'], $row['expected'], $row['submitted'], $row['average'], $row['missing']];
         }

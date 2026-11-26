@@ -1,3 +1,5 @@
+> **Dokumen historis:** catatan review dan implementasi UI awal. Beberapa rincian (nama SIMUS, dashboard, pagination, dan alur menu) telah berubah. Jangan menggunakan dokumen ini sebagai spesifikasi perilaku terbaru; baca [AI_GUIDE.md](AI_GUIDE.md) terlebih dahulu.
+
 # SIMUS — design review dan implementasi
 
 ## Summary

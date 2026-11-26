@@ -2,6 +2,12 @@
 
 Aplikasi Laravel monolith untuk laporan tugas harian Pondok Pesantren Syafa'aturrasul. Menggunakan Laravel 13 / Livewire 4 yang sudah terpasang pada proyek awal (PRD menyebut Laravel 12), Tailwind, dan autentikasi Fortify. Struktur komponen mengikuti direktori `app/Livewire/Dashboard`, `Reports`, dan `Admin`.
 
+## Untuk AI atau pengembang yang baru masuk
+
+Mulai dari [AGENTS.md](AGENTS.md), lalu baca [Panduan AI](docs/AI_GUIDE.md), [Peta arsitektur dan data](docs/ARCHITECTURE.md), dan [Operasional/pengujian/deployment](docs/OPERATIONS.md). Dokumen tersebut memisahkan aturan bisnis yang berlaku sekarang dari riwayat perubahan. `memory.md` hanya catatan lokal, tidak ikut Git.
+
+Panduan aktif terakhir ditinjau **24 November 2026**. Bagian deployment fitur lama di bawah adalah konteks instalasi historis; untuk hosting yang sudah berisi data, utamakan prosedur update aman dalam OPERATIONS.
+
 ## Menjalankan lokal
 
 ```sh
@@ -25,7 +31,7 @@ Perintah admin meminta password secara tersembunyi (wajib diisi). Seeder sekaran
 ## Fitur
 
 - Dashboard per role, akun aktif, registrasi publik dinonaktifkan.
-- Master asrama, kegiatan, akun dan penempatan; 11 kegiatan awal di-seed tanpa membuat akun demo.
+- Master asrama, kegiatan, akun dan penempatan; seeder menyiapkan 11 kegiatan, 26 asrama, admin dan 37 pembina bawaan.
 - Laporan draft dan terkirim, checklist opsional, kendala, catatan, maksimal 5 foto baru masing-masing di bawah 2 MB.
 - Snapshot nama/urutan/daftar kegiatan, persentase server, indeks unik laporan dan item.
 - Foto privat pada disk `local`, hanya tersedia melalui endpoint yang memeriksa policy.
@@ -34,13 +40,13 @@ Perintah admin meminta password secara tersembunyi (wajib diisi). Seeder sekaran
 - Monitoring hari ini, daftar belum melapor, rekap bulanan berdasarkan riwayat penempatan sampai hari ini, rata-rata tanpa draft, dan export `.xlsx` dengan cakupan akses yang sama.
 - Zona waktu Asia/Jakarta; validasi inti dalam Bahasa Indonesia.
 
-Pelaporan tanggal lampau untuk laporan baru dibatasi ke admin pada implementasi awal. Laporan lama milik sendiri tetap dapat diedit selama belum diverifikasi. Form admin saat ini mengelola satu penempatan aktif per pengguna; relasi database mendukung beberapa asrama koordinator.
+Pelaporan tanggal lampau untuk laporan baru dibatasi ke admin pada implementasi awal. Laporan lama milik sendiri tetap dapat diedit selama belum diverifikasi. Form admin mendukung beberapa penempatan asrama per pembina/koordinator dengan riwayat tanggal.
 
 ## Validasi
 
 ```sh
 php artisan test
-vendor/bin/pint --test
+vendor/bin/pint --dirty --format agent
 vendor/bin/phpstan analyse --debug --no-progress
 npm run build
 ```
@@ -51,7 +57,7 @@ npm run build
 
 Arahkan document root ke `public`, gunakan HTTPS, `APP_DEBUG=false`, set kredensial database dan layanan email untuk reset password, dan jalankan migrasi, build, serta `php artisan optimize`. PHP memerlukan ekstensi database, fileinfo, dan zip (export XLSX). Pastikan `storage` dan `bootstrap/cache` dapat ditulis. Tidak perlu `storage:link` untuk foto laporan privat. Atur `upload_max_filesize` minimal 2M dan `post_max_size` di atas 10M.
 
-Backup database dan `storage/app/private` harus dijadwalkan pada hosting. Deployment hosting, konfigurasi email, uji MySQL/MariaDB, dan pemeriksaan visual pada perangkat fisik belum dilakukan. Notifikasi WhatsApp, PWA, penilaian berbobot, dan integrasi eksternal termasuk fase lanjutan PRD. Cetak rapor PDF langsung sudah tersedia.
+Backup database dan `storage/app/private` harus dijadwalkan pada hosting. Pemilik sudah menjalankan aplikasi di hosting. Konfigurasi email, hasil pengujian MySQL/MariaDB serta tampilan perangkat fisik perlu diverifikasi pada environment tujuan; tes lokal tidak membuktikan keadaan hosting. Notifikasi WhatsApp, PWA, penilaian berbobot, dan integrasi eksternal termasuk fase lanjutan PRD. Cetak rapor PDF langsung sudah tersedia.
 
 
 ## Seeder data awal pembina
@@ -74,7 +80,7 @@ Akun seeder terbaru di semua environment, termasuk production:
 
 ## GitHub dan hosting dengan git pull
 
-Repository menyertakan source, migration/seeder, `composer.lock`, `package-lock.json`, `.env.example`, dan **hasil build `public/build`**. Dependensi, `.env` asli, cache, log, database lokal, upload privat, screenshot pengujian, dan `memory.md` diabaikan melalui `.gitignore`.
+Repository menyertakan source, migration/seeder, `composer.lock`, `package-lock.json`, `.env.example`, dan **hasil build `public/build`**. Dependensi, `.env` asli, cache, log, database lokal, upload privat, screenshot pengujian, dan `memory.md` diabaikan melalui `.gitignore`; `AGENTS.md` serta panduan AI disiapkan untuk ikut Git.
 
 Setiap mengubah frontend, jalankan `npm ci` (jika dependensi berubah) lalu `npm run build` **sebelum commit/push**. Commit perubahan source beserta hasil build agar hosting tidak perlu Node.js.
 
@@ -129,9 +135,9 @@ Modul ini terpisah dari laporan kegiatan harian dan tidak mencakup absensi.
 
 1. Admin membuka **Santri binaan**, menambahkan santri beserta penempatan asrama melalui popup. Hanya nama yang wajib. NISN, kelahiran, orang tua, kategori, dan asrama opsional; NISN tetap unik jika diisi. Penempatan harus sesuai kategori putra/putri; perubahan asrama mempertahankan riwayat penempatan.
 2. Admin membuka **Tahun ajaran & semester**, menyiapkan master tahun ajaran, master aspek beserta indikator, lalu membuat semester Ganjil/Genap dengan memilih aspek dari master. Semester baru menggunakan pilihan A/B/C/D secara default. Status Aktif/Tidak aktif dikendalikan admin; tanggal menjadi keterangan, bukan pembuka/penutup otomatis. Mengaktifkan satu periode menonaktifkan periode lain. Aspek dan pilihan nilai dikunci setelah penilaian pertama tersimpan; gunakan periode baru untuk rubrik berbeda.
-3. Musyrif/Musyrifah membuka tab **Santri** untuk melihat tabel identitas santri aktif dalam asrama penugasannya. Tombol **Rapor Asrama** di atas tabel membuka daftar pengisian nilai memakai periode aktif admin. Catatan perkembangan/bimbingan/tindak lanjut tetap tersedia pada profil santri. Pilih asrama dan satu aspek, isi nilai banyak santri dalam tabel, kemudian simpan halaman tersebut. Setelah semua aspek terisi, lengkapi catatan per santri melalui Catatan & kirim rapor. Semua aspek, perkembangan, dan fokus pembinaan harus terisi sebelum dikirim.
+3. Musyrif/Musyrifah membuka tab **Santri** untuk melihat tabel identitas santri aktif dalam asrama penugasannya. Tombol **Rapor Asrama** di atas tabel membuka daftar pengisian nilai memakai periode aktif admin. Catatan perkembangan/bimbingan/tindak lanjut tetap tersedia pada profil santri. Pilih asrama dan satu aspek, isi nilai banyak santri dalam tabel, kemudian simpan seluruh nilai tersebut. Setelah semua aspek terisi, lengkapi catatan per santri melalui Catatan & kirim rapor. Semua aspek, perkembangan, dan fokus pembinaan harus terisi sebelum dikirim.
 4. Koordinator memeriksa penilaian asrama penugasannya melalui **Pemeriksaan penilaian**. Admin dapat memeriksa seluruh asrama. Penilaian dapat disetujui atau dikembalikan dengan catatan revisi.
-5. Rapor yang sudah tersimpan dapat dibuka dan dibuka langsung sebagai PDF A4 untuk dicetak atau diunduh. Admin dapat membukanya kembali untuk revisi dengan alasan wajib.
+5. Rapor yang sudah tersimpan dapat dibuka langsung sebagai PDF A4 untuk dicetak atau diunduh. Admin dapat membukanya kembali untuk revisi dengan alasan wajib.
 
 Ada satu penilaian per santri per periode, digunakan bersama oleh pembina yang berwenang. Pemeriksaan versi mencegah perubahan pembina lain tertimpa. Identitas, asrama, nama periode, aspek, dan pilihan nilai disalin saat penilaian pertama dibuat agar riwayat tetap konsisten. Tindakan simpan, pemeriksaan, dan buka kembali dicatat pada `assessment_audits`. Catatan pembinaan tidak otomatis menjadi nilai, skor, atau peringkat.
 
@@ -169,15 +175,15 @@ Update ini memerlukan `php artisan migrate --force` pada hosting. Migrasi baru m
 
 Daftar Santri berisi nama/NISN, asrama, TTL, nama ayah, dan nama ibu; pencarian serta filter asrama tetap tersedia. Pembina tidak memilih periode pada daftar/profil santri. Penilaian dipisahkan ke **Rapor Asrama** (`/santri/rapor-asrama`), dengan pilihan asrama/aspek untuk membuka tabel nilai, status kelengkapan tiap santri, serta Catatan & kirim rapor/Lihat rapor. Daftar identitas dan rapor memakai pagination 10 per halaman serta navigasi Livewire SPA.
 
-Pengaturan periode dan mata pelajaran/aspek tersedia khusus admin pada halaman Pemeriksaan penilaian. Pilihan nilai dapat berupa label atau angka yang ditentukan admin (2–10 pilihan). Komponen yang sudah digunakan tetap dikunci untuk menjaga snapshot; buat periode baru untuk rubrik berbeda. Bila tidak ada periode aktif, identitas santri tetap dapat dilihat dan pengisian rapor ditutup. Adaptasi alur penilaian per aspek memerlukan migrasi master tahun ajaran/aspek dan indikator; lihat petunjuk berikut.
+Pengaturan tahun/semester global tersedia khusus admin pada Tahun Ajaran; master aspek ada di Aspek penilaian, dan rubrik semester melalui Aspek & skala nilai. Pilihan nilai dapat berupa label atau angka yang ditentukan admin (2–10 pilihan). Komponen yang sudah digunakan tetap dikunci untuk menjaga snapshot; buat periode baru untuk rubrik berbeda. Bila tidak ada periode aktif, identitas santri tetap dapat dilihat dan pengisian rapor ditutup. Adaptasi alur penilaian per aspek memerlukan migrasi master tahun ajaran/aspek dan indikator; lihat petunjuk berikut.
 
 ## Laravel Boost untuk development
 
-Laravel Boost dipasang sebagai dependency development (`laravel/boost`, versi terkunci di `composer.lock`). Konfigurasi lokal Codex dibuat melalui `php artisan boost:install`: guidelines `AGENTS.md`, skills `.agents/skills`, dan server MCP `.codex/config.toml`. File konfigurasi/tooling lokal tersebut sudah diabaikan Git sesuai kebijakan repository. Konfigurasi pada komputer ini menggunakan path PHP dan artisan absolut agar server menunjuk proyek yang benar.
+Laravel Boost dipasang sebagai dependency development (`laravel/boost`, versi terkunci di `composer.lock`). Konfigurasi lokal Codex dibuat melalui `php artisan boost:install`: guidelines `AGENTS.md`, skills `.agents/skills`, dan server MCP `.codex/config.toml`. Konfigurasi MCP/skills lokal diabaikan Git; AGENTS.md kini disiapkan ikut Git sebagai pintu masuk dokumentasi AI. Konfigurasi pada komputer ini menggunakan path PHP dan artisan absolut agar server menunjuk proyek yang benar.
 
 Untuk menyiapkan komputer development lain, jalankan `composer install`, lalu `php artisan boost:install` dan pilih Codex. Buka ulang proyek/chat Codex agar konfigurasi MCP yang baru dibaca. Untuk memperbarui guidelines/skills secara manual gunakan `php artisan boost:update`.
 
-Boost tidak diperlukan di hosting production. Tetap gunakan `composer install --no-dev --prefer-dist --optimize-autoloader` di hosting; jangan menjalankan `boost:install` di server production. Tidak ada hook `boost:update` otomatis yang ditambahkan agar deployment tanpa dependency dev tetap berjalan. Instalasi Boost ini tidak mengubah alur Periode/Mata Pelajaran yang sedang ditunda.
+Boost tidak diperlukan di hosting production. Tetap gunakan `composer install --no-dev --prefer-dist --optimize-autoloader` di hosting; jangan menjalankan `boost:install` di server production. Tidak ada hook `boost:update` otomatis yang ditambahkan agar deployment tanpa dependency dev tetap berjalan. Boost hanya alat development; jangan menganggap pemasangannya mengubah alur bisnis tahun ajaran atau aspek.
 
 
 ## Penilaian per aspek mengikuti alur Rapor Asrama

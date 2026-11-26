@@ -1,69 +1,60 @@
-# Implementasi Seeder SIMUS
+# Seeder Sistem Asrama — kondisi saat ini
 
-## File dibuat
+Diperbarui 24 November 2026 dari implementasi yang ada. Nama class `Simus*` adalah identifier teknis lama, bukan nama produk. Untuk gambaran proyek baca [AI_GUIDE.md](AI_GUIDE.md); untuk deployment baca [OPERATIONS.md](OPERATIONS.md).
 
-- `database/seeders/RoleSeeder.php`
-- `database/seeders/AdminSeeder.php`
-- `database/seeders/AsramaSeeder.php`
-- `database/seeders/MusyrifSeeder.php`
-- `database/seeders/MusyrifahSeeder.php`
-- `database/seeders/SimusSeedData.php` — katalog dengan kode kelompok dan identitas pengguna tetap.
-- `database/seeders/SeedsPembina.php` — penyimpanan akun dan relasi tanpa menimpa histori.
-- `database/migrations/2026_11_13_000002_add_seeder_identity_fields.php`
-- `config/simus.php`
-- `app/Http/Middleware/EnsureCredentialsEstablished.php`
-- `app/Http/Controllers/FirstPasswordController.php`
-- `resources/views/auth/first-password.blade.php`
-- `tests/Feature/SimusSeederTest.php`
+## Fungsi dan urutan
 
-## File diubah
+`DatabaseSeeder` menjalankan satu transaksi dengan urutan:
 
-- `database/seeders/DatabaseSeeder.php` — urutan seeder, transaksi, dan 11 kegiatan tetap dipertahankan.
-- `app/Models/User.php`, `app/Models/DailyReport.php`, `app/Policies/DailyReportPolicy.php` — role Musyrif/Super Admin dan akses data.
-- `app/Providers/FortifyServiceProvider.php`, `app/Http/Middleware/EnsureActive.php`, `bootstrap/app.php` — login placeholder diblokir dan wajib penggantian password.
-- `app/Services/DailyReportService.php`, `app/Services/ReportStatisticsService.php` — laporan dan rekap mendukung kedua jenis pembina.
-- `app/Livewire/Dashboard/AdminDashboard.php`, `app/Livewire/Dashboard/MusyrifahDashboard.php` — akses dashboard role baru.
-- `app/Livewire/Admin/ManageMusyrifah.php`, `app/Livewire/Admin/ManageAsrama.php`, `app/Livewire/Admin/ManageTasks.php` — akses super admin, pengaturan kredensial, gender dan filter.
-- `app/Livewire/Reports/MonthlyRecap.php`, `app/Livewire/Reports/ReportHistory.php`, `app/Livewire/Reports/ReportMonitoring.php` — akses dan filter sesuai role baru.
-- `app/Http/Controllers/ReportExportController.php`, `routes/web.php` — export super admin dan halaman pergantian password.
-- `resources/views/layouts/simus.blade.php`
-- `resources/views/livewire/admin/users.blade.php`, `resources/views/livewire/admin/asrama.blade.php`
-- `resources/views/livewire/dashboard/index.blade.php`
-- `resources/views/livewire/reports/form.blade.php`, `resources/views/livewire/reports/monthly.blade.php`
-- `tests/Feature/ReportMonitoringTest.php` — pemeriksaan nama pada export menangani escaping XML.
-- `.env.example`, `README.md` — konfigurasi production dan petunjuk aktivasi akun.
-- `public/build/` — hasil rebuild aset.
+1. RoleSeeder — menggunakan role pada kolom users, bukan tabel role/package permission baru.
+2. AdminSeeder — akun bootstrap Administrator.
+3. AsramaSeeder — master asrama dari SimusSeedData.
+4. MusyrifSeeder dan MusyrifahSeeder — identitas pembina serta penempatan awal.
+5. PembinaCredentialsSeeder — mengaktifkan kredensial akun katalog yang masih pending.
+6. Sebelas DailyTask awal dengan firstOrCreate berdasarkan judul.
 
-## Hasil database lokal
+File rujukan berada di `database/seeders`. `SimusSeedData.php` adalah katalog nama/code/seed_key; `SeedsPembina.php` menjaga identitas stabil dan hanya membuat penempatan awal jika user belum memiliki riwayat penempatan.
 
-`php artisan migrate` dan `php artisan db:seed` berhasil. Pemanggilan seed berulang menghasilkan jumlah yang sama:
+## Data awal pada database kosong
 
-| Data | Jumlah |
+| Data | Jumlah katalog |
 |---|---:|
-| Super Admin | 1 |
 | Asrama putra | 12 |
 | Asrama putri | 14 |
 | Total asrama | 26 |
 | Musyrif | 22 |
 | Musyrifah | 15 |
-| Total pengguna | 38 |
-| Penempatan aktif | 37 |
-| Pembina menunggu penetapan kredensial | 37 |
+| Pembina | 37 |
+| Super admin bootstrap | 1 |
+| Pengguna total | 38 |
+| Kegiatan awal | 11 |
 
-Selisih dengan target 25 asrama berasal dari rincian sumber yang berisi 12 kelompok putra. Seluruh nama dipertahankan; tidak ada kelompok yang digabung atau dihapus. Perbandingan sebelum/sesudah reseed mengonfirmasi password, email, status penetapan kredensial, dan penempatan tidak berubah.
+PRD awal menyebut total kelompok berbeda. Implementasi mempertahankan 12+14 rincian sumber, termasuk nama kelompok dengan `&`; jangan menggabungkannya untuk memaksakan total lama. Jumlah di atas bukan jumlah data terkini pada hosting.
 
-## Konfigurasi tersisa
+Tidak ada santri, periode penilaian, atau nilai fiktif yang ditambahkan otomatis oleh seeder utama.
 
-- Admin perlu menetapkan email asli dan password individual pembina melalui menu Pengguna & Penempatan. Identifier `.invalid` tidak bisa login atau menerima notifikasi reset/verifikasi.
-- Production perlu `SIMUS_ADMIN_PASSWORD` kuat dari environment. Akun yang baru dibuat pada production wajib mengganti password sebelum mengakses fitur. Reseeding tidak mereset password yang sudah ada.
-- Konfigurasi layanan email dan validasi deployment MySQL/hosting tetap diperlukan sesuai README.
+## Kredensial yang berlaku
 
+- Admin bootstrap: `admin@ppsyaaturrasul.com`.
+- Email pembina berdasarkan nama, domain `@syafaaturrasul.com`; suffix angka menangani benturan email. Mailbox sungguhan tidak dibuat oleh seeder.
+- Password awal admin/pembina katalog adalah `123456`, termasuk production, sesuai permintaan pemilik; disimpan sebagai hash.
+- Akun hasil seed siap login dan tidak diwajibkan mengganti password pertama. `SIMUS_ADMIN_PASSWORD` tidak diperlukan.
+- Placeholder `.invalid` dan flag kesiapan masih ada untuk alur internal/legacy, tetapi akun baru dari seluruh rangkaian seed utama diteruskan ke PembinaCredentialsSeeder agar siap login.
+- `DevelopmentPembinaSeeder` adalah alias kompatibilitas; bukan kebijakan production yang berbeda.
 
-## Pembaruan development
+## Batas keamanan data saat reseed
 
-Ditambahkan `database/seeders/DevelopmentPembinaSeeder.php`, dipanggil oleh `DatabaseSeeder` hanya untuk environment local/testing. Pada database development yang sudah diperbarui, 37 pembina sudah siap login memakai email berdasarkan nama `@syafaaturrasul.com` dan password `123456`; jumlah pembina menunggu kredensial menjadi 0. Akun admin tidak diubah. Password tetap di-hash, dan tidak wajib diganti saat login di development. Akun yang sudah dipersonalisasi tidak direset ketika seed diulang. Ketentuan placeholder dan penetapan kredensial pada bagian sebelumnya tetap berlaku untuk production.
+Seeder bukan perintah update aplikasi rutin. Jangan menyimpulkan “idempotent” berarti tidak mengubah data bisnis:
 
+- SeedsPembina tidak menimpa kredensial/identitas yang sudah dipersonalisasi atau menyusun ulang penempatan yang sudah memiliki histori.
+- PembinaCredentialsSeeder hanya menginisialisasi akun katalog dengan credentials_ready false.
+- AdminSeeder mempertahankan password akun bootstrap yang sudah ada, tetapi memperbarui nama/role/status dan flag sesuai implementasinya.
+- **AsramaSeeder memperbarui nama/gender/unit/status aktif asrama katalog berdasarkan code.** Reseed dapat menimpa perubahan manual master asrama.
+- ResetSeededPasswordsSeeder secara sengaja mengembalikan password akun bootstrap/katalog; jangan menjalankannya saat deployment rutin.
+- Seeder tidak menggantikan backup; baca source dan tes sebelum mengubahnya.
 
-## Pembaruan terbaru: password awal hosting
+Pada database development baru yang kosong, seed dapat dijalankan secara sengaja setelah migrate. Pada hosting yang sudah terisi, gunakan prosedur update tanpa seeder dalam OPERATIONS. Jangan menjalankan seed untuk memperbaiki CSS, PDF, pagination, atau menu.
 
-Atas permintaan eksplisit pengguna, seeder utama kini menyiapkan admin dan 37 pembina dengan password awal 123456 juga di production, tanpa SIMUS_ADMIN_PASSWORD. Akun baru/pending dapat langsung login tanpa wajib mengganti password. Bagian kebijakan production kuat sebelumnya sudah digantikan; lihat README terbaru. Reseed mempertahankan password personal. Reset yang disengaja dilakukan dengan ResetSeededPasswordsSeeder, hanya untuk akun bootstrap/katalog bawaan. Password tetap di-hash.
+## Verifikasi
+
+`tests/Feature/SimusSeederTest.php` mencakup katalog, kredensial, pengulangan seed dan perlindungan identitas/penempatan. Jalankan tes tersebut jika mengubah seeder; gunakan database testing terpisah, bukan database aplikasi aktif.

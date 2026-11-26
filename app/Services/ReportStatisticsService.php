@@ -18,7 +18,7 @@ class ReportStatisticsService
     }
 
     /** @return list<array<string,mixed>> */
-    public function monthly(User $viewer, string $month, ?int $asramaId = null, ?int $userId = null): array
+    public function monthly(User $viewer, string $month, ?int $asramaId = null, ?int $userId = null, ?string $pembinaRole = null): array
     {
         $start = Carbon::createFromFormat('!Y-m', $month)->startOfMonth();
         $end = $start->copy()->endOfMonth()->min(today());
@@ -27,6 +27,9 @@ class ReportStatisticsService
             $assignments->where('user_id', $viewer->id);
         } elseif ($viewer->role === 'koordinator') {
             $assignments->whereIn('asrama_id', $viewer->assignedAsramas()->pluck('asramas.id'));
+        }
+        if ($pembinaRole) {
+            $assignments->where('assignment_role', $pembinaRole);
         }
         if ($asramaId) {
             $assignments->where('asrama_id', $asramaId);
