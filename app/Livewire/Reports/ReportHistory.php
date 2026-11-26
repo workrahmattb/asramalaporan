@@ -5,6 +5,7 @@ namespace App\Livewire\Reports;
 use App\Models\Asrama;
 use App\Models\DailyReport;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -30,11 +31,18 @@ class ReportHistory extends Component
         $this->resetPage();
     }
 
+    /** @param Builder<DailyReport> $query
+     * @return Builder<DailyReport> */
+    protected function filterReports(Builder $query): Builder
+    {
+        return $query;
+    }
+
     public function render(): View
     {
         $asramas = auth()->user()->isAdmin() ? Asrama::all() : auth()->user()->assignedAsramas()->get();
         $q = DailyReport::visibleTo(auth()->user())->with('user', 'asrama', 'items')->when($this->month, fn ($q) => $q->where('report_date', 'like', $this->month.'%'))->when($this->date, fn ($q) => $q->whereDate('report_date', $this->date))->when($this->asramaId, fn ($q) => $q->where('asrama_id', $this->asramaId))->when($this->status, fn ($q) => $q->where('status', $this->status));
 
-        return view('livewire.reports.history', ['asramas' => $asramas, 'reports' => $q->orderByDesc('report_date')->orderByDesc('id')->paginate(10)])->layout('layouts.simus');
+        return view('livewire.reports.history', ['isMonitoring' => $this instanceof ReportMonitoring, 'asramas' => $asramas, 'reports' => $this->filterReports($q)->orderByDesc('report_date')->orderByDesc('id')->paginate(10)])->layout('layouts.simus');
     }
 }

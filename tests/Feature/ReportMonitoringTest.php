@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Reports\ReportMonitoring;
 use App\Models\Asrama;
 use App\Models\DailyTask;
 use App\Models\User;
@@ -11,11 +12,37 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class ReportMonitoringTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_monitoring_filters_pembina_category_and_preserves_access_and_other_filters(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $a = Asrama::create(['name' => 'A', 'code' => 'A']);
+        $b = Asrama::create(['name' => 'B', 'code' => 'B']);
+        $putra = User::factory()->create(['name' => 'Putra Uji', 'role' => 'musyrif']);
+        $putri = User::factory()->create(['name' => 'Putri Uji', 'role' => 'musyrifah']);
+        foreach ([[$putra, $a], [$putri, $b]] as [$user, $dorm]) {
+            $user->asramas()->attach($dorm, ['assignment_role' => $user->role, 'start_date' => today()->toDateString()]);
+            app(DailyReportService::class)->save($user, ['report_date' => today()->toDateString(), 'status' => 'submitted', 'completed' => []]);
+        }
+        $this->actingAs($admin)->get('/reports/monitoring')->assertOk()->assertSee('Kategori pembina');
+        Livewire::actingAs($admin)->test(ReportMonitoring::class)->assertViewHas('reports', fn ($reports) => $reports->total() === 2)
+            ->call('setPage', 2)->set('pembinaRole', 'musyrif')->assertSet('paginators.page', 1)
+            ->assertSee('Putra Uji')->assertDontSee('Putri Uji')
+            ->set('pembinaRole', 'musyrifah')->assertSee('Putri Uji')->assertDontSee('Putra Uji')
+            ->set('status', 'draft')->assertViewHas('reports', fn ($reports) => $reports->total() === 0)
+            ->set('status', '')->set('pembinaRole', '')->assertViewHas('reports', fn ($reports) => $reports->total() === 2)
+            ->set('pembinaRole', 'invalid')->assertHasErrors('pembinaRole');
+        $coordinator = User::factory()->create(['role' => 'koordinator']);
+        $coordinator->asramas()->attach($a, ['assignment_role' => 'koordinator', 'start_date' => today()->toDateString()]);
+        Livewire::actingAs($coordinator)->test(ReportMonitoring::class)->set('pembinaRole', 'musyrifah')->assertViewHas('reports', fn ($reports) => $reports->total() === 0);
+        $this->actingAs($putra)->get('/reports/monitoring')->assertForbidden();
+    }
 
     public function test_coordinator_scope_monthly_recap_export_and_duplicate_prevention(): void
     {

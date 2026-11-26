@@ -68,7 +68,8 @@ Semua akses memerlukan akun aktif. Middleware `EnsureActive` juga memeriksa kesi
 7. Foto memakai upload berkas biasa, **bukan capture kamera**. Maksimal lima foto total per laporan, masing-masing foto baru maksimal **1953 KiB**; tidak ada kompresi JavaScript aktif.
 8. Foto privat di disk local, melalui route foto ber-policy. Jangan memindahkan upload laporan ke public atau membuka URL storage langsung.
 9. Rekap bulanan admin/koordinator memakai filter kategori pembina Semua / Musyrif (Putra) / Musyrifah (Putri), menggantikan dropdown asrama. Daftar nama pembina mengikuti kategori; mengganti kategori mengosongkan pilihan nama dan kembali ke halaman pertama. Filter kategori berlaku pada baris rekap dan Excel berdasarkan assignment_role riwayat penempatan. Rekap pribadi pembina tetap memakai tampilan semula.
-10. Riwayat dan monitoring menampilkan kendala serta catatan tambahan. Statistik dan ekspor harus tetap menghitung seluruh data sesuai filter, bukan hanya halaman tabel yang terlihat.
+10. Monitoring Laporan mengganti dropdown Asrama dengan Kategori pembina (Semua/Musyrif Putra/Musyrifah Putri), berdasarkan role pemilik laporan; filter tanggal/bulan/status dan cakupan akses tetap berlaku. Riwayat Laporan tetap memiliki filter asrama semula.
+11. Riwayat dan monitoring menampilkan kendala serta catatan tambahan. Statistik dan ekspor harus tetap menghitung seluruh data sesuai filter, bukan hanya halaman tabel yang terlihat.
 
 ## Aturan aktif: santri dan asrama
 
